@@ -1,0 +1,34 @@
+/* about photo: round portrait with a forest ring and a soft brass glow */
+.photo.portrait {
+  position: relative; aspect-ratio: 1; width: 100%; padding: 0; border-radius: 50%; border: 0;
+  background: conic-gradient(from 210deg, #6fcf97, #1f6b45, #d8b46a, #1f6b45, #6fcf97);
+  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.9), 0 0 60px -10px rgba(111, 207, 151, 0.18);
+  align-self: start;
+}
+.photo.portrait img {
+  position: absolute; inset: 3px; width: calc(100% - 6px); height: calc(100% - 6px);
+  border-radius: 50%; object-fit: cover; border: 4px solid var(--bg); display: block;
+}
+
+.row2 { align-items: start; }
+.field { align-content: start; }
+
+/* the dragon crest as a faint watermark behind the hero: whole */
+.hero-crest {
+  position: absolute; z-index: 0; pointer-events: none; user-select: none;
+  height: min(760px, calc(100% - 305px)); width: auto; max-width: 58vw; aspect-ratio: 1; object-fit: contain; object-position: right center; top: 4px;
+  right: max(var(--gutter), calc((100% - var(--wrap)) / 2 + var(--gutter)));
+  opacity: 0.15;
+}
+@media (max-width: 720px) {
+  .hero-crest { height: auto; max-width: none; width: min(108vw, 520px); right: 50%; top: 34%; transform: translate(50%, -50%); opacity: 0.07; }
+}
+
+@media (max-width: 720px) {
+  .case-head { grid-template-columns: auto minmax(0, 1fr); column-gap: 14px; row-gap: 8px; align-items: center; }
+  .case-idx { font-size: 40px; line-height: 1; letter-spacing: -0.04em; }
+  .case-who { display: contents; }
+  .case-name { grid-column: 2; }
+  .case-who p { grid-column: 1 / -1; margin-top: 0; }
+  .case-where { grid-column: 1 / -1; justify-items: start; margin-top: 4px; }
+}

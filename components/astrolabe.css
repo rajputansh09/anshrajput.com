@@ -1,0 +1,334 @@
+/* skill astrolabe */
+/* the turning layers' corners swing outside the disc */
+#skills { overflow-x: hidden; overflow-x: clip; }
+.astro {
+  display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(290px, 0.7fr); gap: 44px; align-items: center;
+  padding-top: 40px;
+}
+.astro.view-scroll { grid-template-columns: minmax(0, 1fr); }
+.astro.view-scroll .astro-panel { order: -1; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+.astro.view-scroll .astro-legend { grid-template-columns: 1fr 1fr; }
+.astro-inspect[hidden] { display: none; }
+
+/* the disc is pinned to the top of its row */
+.astro-stage { position: relative; max-width: 720px; width: 100%; margin: 0 auto; aspect-ratio: 1; align-self: start; }
+/* a long press on iPhone would otherwise start text selection */
+.astro-stage, .astro-strip, .astro-stage *, .astro-strip * {
+  -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent;
+}
+.astro-stage::before {
+  /* cast shadow and a faint green glow under the instrument */
+  content: ""; position: absolute; inset: 3% 1% -2% 3%; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.35) 70%, transparent);
+  filter: blur(18px); transform: translate(2%, 3%);
+}
+.astro-disc {
+  position: absolute; inset: 0.7%; border-radius: 50%; pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.35) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.55 0 0 0 0 0.68 0 0 0 0 0.58 0 0 0 0.22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012' numOctaves='4' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 0.1 0 0 0 0 0.22 0 0 0 0 0.15 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E"),
+    radial-gradient(circle at 40% 35%, #183326, #0c1c14 55%, #060e09);
+  background-size: auto, 220px 220px, cover, auto;
+  box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.7);
+}
+.astro-svg {
+  position: absolute; inset: 0; display: block; width: 100%; height: 100%; overflow: visible;
+  user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+  --k: 1.3;
+}
+.astro-layer { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.astro-spins { position: absolute; inset: 0; pointer-events: none; }
+.astro-spin { position: absolute; pointer-events: none; will-change: transform; transform-origin: 50% 50%; transition: opacity 0.4s; }
+.astro-spin svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.astro-spin.gone { opacity: 0.18; }
+.astro-sweep { transition: none; }
+.astro-sweep path { fill: none; stroke: #fff4cf; stroke-linecap: round; }
+.astro-fire { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.astro-svg.grabbing, .astro-svg.grabbing * { cursor: grabbing !important; }
+
+/* outer rim */
+.rim-band { fill: none; stroke: url(#astro-rim); stroke-width: 26; }
+.rim-edge { fill: none; stroke: #1a1006; stroke-width: 1.6; stroke-opacity: 0.8; }
+.rim-ticks { fill: none; stroke: #2a1a08; stroke-width: 1.4; stroke-opacity: 0.7; }
+.rim-text { fill: #2b1a07; fill-opacity: 0.75; font-size: 17px; letter-spacing: 9px; dominant-baseline: central; }
+
+/* bands: fixed bronze with grooves; the engravings on them turn */
+.band { transition: opacity 0.4s; }
+.band.gone { opacity: 0.18; }
+.band-metal { fill: none; stroke: url(#astro-bronze); stroke-width: 30; }
+.band-groove { fill: none; stroke: #120b04; stroke-width: 2; stroke-opacity: 0.85; }
+.band-shine { fill: none; stroke: #fff2c8; stroke-width: 1; stroke-opacity: 0.35; }
+
+.ring-ticks { fill: none; stroke: #1c1206; stroke-width: 1.3; stroke-opacity: 0.65; }
+.ring-hit { fill: none; stroke: transparent; stroke-width: 70; pointer-events: stroke; cursor: grab; }
+.ring-hit.gone { pointer-events: none; }
+.ring-name {
+  fill: #24170a; fill-opacity: 0.82; font-family: var(--mono); font-style: normal; font-size: 12.5px; font-weight: 700; letter-spacing: 5px;
+  paint-order: stroke; stroke: rgba(255, 236, 190, 0.28); stroke-width: 1.2px;
+}
+.astro-light { pointer-events: none; }
+
+/* rune gems in bronze bezels */
+.rune { cursor: pointer; transform: scale(var(--k)); transition: opacity 0.3s; outline: none; }
+.rune-hit { fill: transparent; }
+.rune-halo { opacity: 0; transition: opacity 0.6s; pointer-events: none; }
+.rune-gem { opacity: 0; transition: opacity 0.6s; }
+.rune-glyph {
+  fill: #8a8366; font-size: 15px; text-anchor: middle; pointer-events: none; transition: fill 0.4s;
+}
+/* sleeping runes smoulder, inviting a touch */
+.seen .rune:not(.awake) .rune-glyph { animation: ember 3.2s ease-in-out infinite; }
+@keyframes ember { 50% { fill: #f0b45a; } }
+.rune-hint {
+  fill: none; stroke: #ffd27a; stroke-width: 2.5; pointer-events: none;
+  transform-box: fill-box; transform-origin: center; animation: hint 1.5s ease-out infinite;
+}
+@keyframes hint { from { transform: scale(0.8); opacity: 1; } to { transform: scale(1.8); opacity: 0; } }
+.rune-label {
+  fill: #b9c4bb; font-family: var(--sans); font-style: normal; font-size: 16px; font-weight: 600; text-anchor: middle; pointer-events: none;
+  paint-order: stroke; stroke: #050b07; stroke-width: 5px; stroke-linejoin: round; transition: fill 0.3s, opacity 0.3s;
+}
+.rune.awake .rune-gem { opacity: 1; }
+.rune.awake .rune-halo { opacity: 0; }
+.rune.awake .rune-glyph { fill: #1a0f04; }
+.rune.awake .rune-label { fill: #f6ecd2; }
+.rune:hover .rune-halo, .rune:focus-visible .rune-halo, .rune.lit .rune-halo { opacity: 1; }
+.rune:hover .rune-bezel, .rune.lit .rune-bezel { stroke: #fff3cf; stroke-width: 1.5; }
+.rune:focus-visible .rune-bezel { stroke: #fff; stroke-width: 2.5; }
+.rune.lit .rune-label { fill: #fff6dc; }
+.rune.dim { opacity: 0.3; }
+.rune.gone { opacity: 0.05; pointer-events: none; }
+
+.compact .rune-label { opacity: 0; }
+.compact .rune.lit .rune-label { opacity: 1; }
+
+.astro-strip { display: grid; gap: 10px; margin-top: -6px; }
+.astro-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.astro-tabs button {
+  padding: 8px 4px; border-radius: 10px; border: 1px solid var(--line-2); background: transparent; font-size: 13px; font-weight: 600;
+}
+.astro-tabs button[aria-selected="true"] { border-color: currentColor; background: rgba(216, 180, 106, 0.08); box-shadow: inset 0 -2px 0 currentColor; }
+.astro-runes { display: flex; flex-wrap: wrap; gap: 6px; }
+.astro-runes button {
+  display: inline-flex; align-items: center; gap: 7px; padding: 7px 12px 7px 8px; border-radius: 999px; font-size: 14px;
+  border: 1px solid var(--line-2); background: rgba(7, 17, 12, 0.6); color: var(--muted); transition: color 0.3s, border-color 0.3s;
+}
+.astro-runes .g { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; font-size: 11px; background: #1d2a22; color: #8a8366; }
+.astro-runes button.on { color: var(--text); border-color: var(--hue); border-color: color-mix(in srgb, var(--hue) 50%, transparent); }
+.astro-runes button.on .g { background: var(--hue); color: #1a0f04; box-shadow: 0 0 10px var(--hue); }
+.astro-runes button.sel { border-color: var(--hue); }
+
+/* seals: bronze hex medallions that catch fire */
+.seal { cursor: pointer; outline: none; transition: opacity 0.3s; }
+.seal-body { transform: scale(min(var(--k), 1.3)); }
+.seal-hit { fill: transparent; }
+.seal-halo { opacity: 0; transition: opacity 0.4s; pointer-events: none; }
+.seal-hex { fill: url(#astro-bezel); stroke: #1a1006; stroke-width: 1.5; }
+.seal-face { fill: #10231a; stroke: rgba(255, 236, 190, 0.35); stroke-width: 1; transition: fill 0.3s; }
+.seal-mono {
+  fill: #e8cf8f; text-anchor: middle; font-size: 18px; font-weight: 700; letter-spacing: 1px; pointer-events: none;
+  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; transition: fill 0.3s;
+}
+.seal-orbit { fill: none; stroke: rgba(216, 180, 106, 0.3); stroke-dasharray: 2 8; stroke-width: 1.5; }
+.seal:hover .seal-face, .seal:focus-visible .seal-face { fill: #2a2410; }
+.seal:focus-visible .seal-hex { stroke: #fff; stroke-width: 3; }
+.seal.lit .seal-halo { opacity: 1; animation: flicker 0.18s steps(2) infinite alternate; }
+.seal.lit .seal-face { fill: #5a2a0a; }
+.seal.lit .seal-mono { fill: #fff3cf; }
+.seal.dim { opacity: 0.35; }
+@keyframes flicker { to { opacity: 0.8; } }
+
+/* fire channel: revealed by the flame front, then smoulders */
+.thread { fill: none; stroke: #ffc066; stroke-width: 3.2; stroke-linecap: round; stroke-opacity: 0.9; }
+
+/* the dragon's eye */
+.eye-halo { opacity: 0.55; transform-box: fill-box; transform-origin: center; animation: eye-breathe 4s ease-in-out infinite; pointer-events: none; }
+.eye-bezel { stroke: #1a1006; stroke-width: 1.5; }
+.eye-rim { fill: #0a1610; stroke: #1a1006; stroke-width: 2; }
+.eye-ticks { fill: none; stroke: #2a1a08; stroke-width: 1.3; }
+.eye-white { fill: #1a0d05; }
+.eye-pupil { fill: #0b0503; }
+.eye-shine { fill: rgba(255, 255, 255, 0.75); }
+.eye-edge { fill: none; stroke: #f0d79a; stroke-width: 2.4; }
+.eye-lid { transform-box: fill-box; transform-origin: center; transform: scaleY(0.06); }
+.seen .eye-lid { animation: eye-open 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) 1.2s both, eye-blink 7s ease-in-out 4s infinite; }
+@keyframes eye-open { from { transform: scaleY(0.06); } to { transform: scaleY(1); } }
+.has-active .eye-halo { opacity: 0.9; animation-duration: 1.4s; }
+@keyframes eye-blink { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.06); } }
+@keyframes eye-breathe { 50% { transform: scale(1.12); opacity: 0.35; } }
+
+.complete .eye-halo { opacity: 0.85; }
+.complete .band-shine { stroke: #ffd48a; stroke-opacity: 0.6; }
+.blaze .band-metal, .blaze .rim-band { animation: blaze 1.2s ease-in-out 3; }
+.blaze .eye-halo { animation: eye-breathe 0.6s ease-in-out infinite; opacity: 1; }
+@keyframes blaze { 50% { stroke: #ffcf7a; } }
+
+/* ---------- Side panel ---------- */
+.astro-panel { display: grid; gap: 16px; align-content: center; position: relative; z-index: 31; }
+.astro-inspect {
+  min-height: 236px; padding: 24px; border-radius: var(--r);
+  border: 1px solid rgba(216, 180, 106, 0.35);
+  background: linear-gradient(180deg, rgba(17, 38, 27, 0.92), rgba(10, 24, 17, 0.92));
+  box-shadow: inset 0 0 0 4px rgba(216, 180, 106, 0.04), 0 30px 60px -40px rgba(0, 0, 0, 0.9);
+}
+.astro-kicker { font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--moss); }
+.astro-inspect h3 {
+  margin: 6px 0 10px; font-size: 30px; line-height: 1.1; font-weight: 600; color: #f0d79a;
+  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+}
+.astro-inspect p { color: var(--muted); font-size: 15.5px; line-height: 1.55; }
+.astro-sub { margin-top: 16px; font-size: 12px !important; letter-spacing: 0.1em; text-transform: uppercase; color: var(--brass) !important; }
+.astro-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.astro-chips button {
+  display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px 5px 6px; border-radius: 999px; font-size: 14px;
+  border: 1px solid var(--line-2); background: rgba(7, 17, 12, 0.6); color: var(--text);
+}
+.astro-chips button:hover { border-color: var(--brass); }
+.astro-chips .mono {
+  display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; font-size: 10px; font-weight: 700;
+  background: var(--brass); color: #1a1206;
+}
+.astro-chips .dot { width: 8px; height: 8px; margin-left: 4px; border-radius: 50%; }
+.astro-link { display: inline-block; margin-top: 14px; color: var(--moss); font-size: 14px; text-decoration: none; }
+.astro-link:hover { text-decoration: underline; }
+
+.astro-progress {
+  display: grid; gap: 10px; padding: 16px 18px; border-radius: var(--r);
+  border: 1px solid var(--line-2); background: rgba(10, 24, 17, 0.7);
+}
+.astro-progress-top { display: flex; justify-content: space-between; align-items: baseline; }
+.astro-progress-top span { font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.astro-progress-top strong { font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; font-size: 26px; color: #f0d79a; line-height: 1; }
+.astro-progress-top small { font-size: 15px; color: var(--muted); }
+.astro-pips { display: grid; grid-template-columns: repeat(31, 1fr); gap: 3px; }
+.astro-pips i { height: 8px; border-radius: 2px; background: rgba(255, 255, 255, 0.07); transition: background 0.4s, box-shadow 0.4s; }
+.astro-pips i.on { background: currentColor; box-shadow: 0 0 8px currentColor; }
+.astro-wake {
+  justify-self: start; border-radius: 999px; padding: 8px 16px; font-weight: 700; font-size: 14px;
+  border: 1px solid #ff9a3a; color: #1a0f04; background: linear-gradient(180deg, #ffd38a, #ff9a3a);
+  box-shadow: 0 6px 20px -8px rgba(255, 140, 50, 0.7);
+}
+.astro-wake:hover { filter: brightness(1.08); }
+.astro-progress.done { border-color: rgba(255, 170, 80, 0.55); box-shadow: 0 0 40px -16px rgba(255, 150, 60, 0.6); }
+.astro-progress.done .astro-wake { background: transparent; color: var(--brass); border-color: rgba(216, 180, 106, 0.45); box-shadow: none; }
+
+.astro-legend { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.astro-legend button {
+  display: flex; align-items: center; gap: 9px; padding: 9px 12px; border-radius: 12px; text-align: left;
+  border: 1px solid var(--line-2); background: transparent; transition: opacity 0.2s, border-color 0.2s;
+}
+.astro-legend button:hover { border-color: currentColor; }
+.astro-legend .dot { width: 10px; height: 10px; border-radius: 50%; background: currentColor; box-shadow: 0 0 10px currentColor; flex: none; }
+.astro-legend .txt { color: var(--text); font-size: 14px; flex: 1; }
+.astro-legend .count { position: static; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.astro-legend button[aria-pressed="false"] { opacity: 0.45; }
+.astro-legend button[aria-pressed="false"] .dot { background: transparent; box-shadow: inset 0 0 0 1.5px currentColor; }
+
+.astro-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.astro-actions button {
+  border: 1px solid rgba(216, 180, 106, 0.4); background: transparent; color: var(--brass); border-radius: 999px; padding: 8px 15px;
+  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; font-style: italic; font-size: 15px;
+}
+.astro-actions button:hover { background: rgba(216, 180, 106, 0.1); }
+
+/* scroll view */
+.astro-scroll { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.astro-scroll section {
+  padding: 20px; border-radius: var(--r); border: 1px solid var(--line-2); border-top: 3px solid var(--hue);
+  background: rgba(14, 32, 23, 0.6); transition: opacity 0.3s;
+}
+.astro-scroll section.gone { opacity: 0.3; }
+.astro-scroll h3 { font-size: 18px; color: var(--hue); margin-bottom: 10px; font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; }
+.astro-scroll li { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-top: 1px solid var(--line); font-size: 15px; }
+.astro-scroll .where { color: var(--muted); font-size: 13px; text-align: right; }
+
+.astro-caption { display: none; z-index: 31; }
+@media (max-width: 960px) {
+  .astro-caption {
+    position: absolute; left: 50%; bottom: -2%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center;
+    padding: 7px 16px; border-radius: 999px; border: 1px solid rgba(216, 180, 106, 0.55); white-space: nowrap;
+    background: rgba(10, 24, 17, 0.95); box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.9); animation: cap-in 0.2s ease-out;
+  }
+  .astro-caption strong { color: #f0d79a; font-size: 15px; line-height: 1.2; font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; }
+  .astro-caption span { color: var(--muted); font-size: 12px; }
+}
+@keyframes cap-in { from { opacity: 0; transform: translate(-50%, 6px); } }
+.sr-only {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+@media (max-width: 960px) {
+  .astro { grid-template-columns: minmax(0, 1fr); gap: 34px; }
+  .astro-stage { max-width: 640px; }
+  .astro-inspect { min-height: 0; }
+  .astro.view-scroll .astro-panel { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 720px) {
+  .astro-stage { width: calc(100% + 2 * var(--gutter) - 12px); margin: 0 calc(6px - var(--gutter)); max-width: none; }
+  .astro-inspect h3 { font-size: 26px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .eye-lid, .seen .eye-lid, .eye-halo, .seal.lit .seal-halo, .seen .rune .rune-glyph, .rune-hint { animation: none; }
+  .eye-lid { transform: none; }
+}
+
+/* ---------- Interactive extras ---------- */
+/* torchlight: a warm glint follows the cursor across the metal */
+.astro-torch {
+  position: absolute; inset: 0.7%; border-radius: 50%; pointer-events: none; opacity: 0; transition: opacity 0.4s;
+  background: radial-gradient(circle at var(--tx, 50%) var(--ty, 50%), rgba(255, 226, 160, 0.16), rgba(255, 200, 120, 0.05) 14%, transparent 30%);
+}
+.astro-stage.torch .astro-torch { opacity: 1; }
+
+/* runes swell under the cursor */
+.rune-bezel, .rune-gem { transform-box: fill-box; transform-origin: center; transition: transform 0.2s, opacity 0.6s; }
+.rune:hover .rune-bezel, .rune:hover .rune-gem, .rune:focus-visible .rune-bezel, .rune:focus-visible .rune-gem { transform: scale(1.18); }
+
+/* the eye is a button */
+.astro-eye { cursor: pointer; outline: none; }
+.astro-eye:hover .eye-bezel, .astro-eye:focus-visible .eye-bezel { stroke: #ffd27a; stroke-width: 3; }
+.astro-eye:focus-visible .eye-rim { stroke: #fff; stroke-width: 3; }
+
+.band.done .band-shine { stroke: var(--hue); stroke-opacity: 0.95; stroke-width: 2.5; }
+.band.done .band-groove { stroke: var(--hue); stroke-opacity: 0.35; }
+.is-complete .rim-text { fill: #ffd27a; fill-opacity: 0.9; }
+
+.astro-toast {
+  position: absolute; left: 50%; top: 4%; transform: translateX(-50%); z-index: 31; white-space: nowrap;
+  padding: 8px 16px; border-radius: 999px; font-weight: 700; font-size: 14px; color: #1a0f04;
+  background: linear-gradient(180deg, #ffe0a0, #ffab4a); box-shadow: 0 12px 30px -10px rgba(255, 140, 50, 0.7);
+  animation: toast-in 2.6s ease both; pointer-events: none;
+}
+@keyframes toast-in { 0% { opacity: 0; transform: translate(-50%, -8px); } 12%, 82% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; } }
+
+/* find a skill */
+.astro-find { position: relative; display: flex; align-items: center; gap: 10px; padding: 0 14px; border-radius: 14px; border: 1px solid rgba(216, 180, 106, 0.4); background: rgba(10, 24, 17, 0.85); }
+.astro-find:focus-within { border-color: var(--brass); box-shadow: 0 0 0 3px rgba(216, 180, 106, 0.15); }
+.astro-find > svg { width: 18px; height: 18px; flex: none; fill: none; stroke: var(--brass); stroke-width: 2; stroke-linecap: round; }
+.astro-find input {
+  flex: 1; min-width: 0; padding: 13px 0; border: 0; outline: none; background: transparent; color: var(--text); font: inherit; font-size: 15px;
+}
+.astro-find input::placeholder { color: var(--muted); }
+.astro-matches {
+  position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 5; display: grid; padding: 6px; border-radius: 14px;
+  border: 1px solid var(--line-2); background: #0c1d14; box-shadow: 0 24px 50px -20px rgba(0, 0, 0, 0.9);
+}
+.astro-matches button {
+  display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; border: 0; border-radius: 9px; background: transparent; text-align: left; font-size: 15px;
+}
+.astro-matches button:hover, .astro-matches button:focus-visible { background: rgba(216, 180, 106, 0.1); }
+.astro-matches .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.astro-matches small { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+
+.astro-sound { display: inline-flex; align-items: center; gap: 6px; }
+.astro-sound svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.astro-sound[aria-pressed="true"] { background: rgba(216, 180, 106, 0.14); }
+.astro-legend .txt { white-space: nowrap; }
+@media (hover: none) { .astro-torch { display: none; } }
+
+@media (max-width: 1400px) {
+  .dragon-ui { transition: opacity 0.3s, visibility 0.3s; }
+  .astro-near .dragon-ui { opacity: 0; visibility: hidden; pointer-events: none; }
+}
