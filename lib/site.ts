@@ -1,7 +1,7 @@
 // contact details and links, all in one place
 export const site = {
   name: "Ansh Rajput",
-  url: "https://anshrajput.com",
+  url: "https://www.anshrajput.com",
   email: "arajput3@ualberta.ca",
   linkedin: "https://linkedin.com/in/ansh-rajput-3a5b78332",
   github: "https://github.com/rajputansh09",
@@ -33,7 +33,7 @@ export const projects: Project[] = [
     what: "This site, built from scratch: two procedurally animated canvas dragons with steering, collision and fire, two dragon games balanced by Playwright bots, a hand-built SVG skill astrolabe, five Unreal games rebuilt to play in the browser, live uptime checks and a Resend contact pipeline.",
     team: "Solo",
     stack: ["Next.js 16", "React 19", "TypeScript", "Canvas 2D", "Web Audio", "Vercel", "Resend", "Playwright"],
-    href: "https://anshrajput.com",
+    href: "https://www.anshrajput.com",
   },
   {
     name: "Carbon Events",

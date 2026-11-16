@@ -60,7 +60,7 @@ const experience: Entry[] = [
 const projects: Entry[] = [
   {
     org: "anshrajput.com: Interactive Portfolio",
-    link: "https://anshrajput.com",
+    link: "https://www.anshrajput.com",
     label: "Live Site",
     right: "Next.js | TypeScript | Canvas 2D",
     bullets: [

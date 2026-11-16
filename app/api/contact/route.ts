@@ -152,7 +152,7 @@ export async function POST(req: Request) {
       to: [email],
       subject: "Your message reached me",
       reply_to: site.email,
-      text: `Hi ${greetName(name)},\n\nThanks for reaching out. Your message came through and I'll reply to this address soon.\n\nAnsh Rajput\nhttps://anshrajput.com\nReference ${ref}`,
+      text: `Hi ${greetName(name)},\n\nThanks for reaching out. Your message came through and I'll reply to this address soon.\n\nAnsh Rajput\nhttps://www.anshrajput.com\nReference ${ref}`,
       html: senderEmail({ ...inquiry, name: greetName(name) }),
     });
   } catch (err) {
