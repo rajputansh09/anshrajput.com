@@ -1,6 +1,6 @@
 "use client";
 
-// the arcade: browser remakes of Ansh's five Unreal Engine 5 games, playable on the page
+// the arcade: browser remakes of my 5 Unreal Engine games
 import { useCallback, useEffect, useRef, useState } from "react";
 import { W, H, type Game, type Input } from "./arcade/core";
 import { Tanks, LEVELS as TANK_LEVELS } from "./arcade/tanks";
@@ -59,7 +59,7 @@ const blankInput = (): Input => ({ ax: 0, ay: 0, aimX: 0, aimY: 0, aimed: false,
 function loadProgress(): Progress {
   try {
     const p = JSON.parse(localStorage.getItem(SAVE) || "{}") as Progress;
-    // carry over a best score from the earlier single-level arcade as a level 1 clear
+    // carry an old best score from the single level version over as a level 1 clear
     const old = JSON.parse(localStorage.getItem(OLD_BEST) || "{}") as Record<string, number>;
     for (const [id, sc] of Object.entries(old)) if (sc > 0 && !p[id]) p[id] = { stars: [1, 0, 0], best: [sc, 0, 0] };
     return p && typeof p === "object" ? p : {};
@@ -108,7 +108,7 @@ export default function Arcade() {
     setMuted(sfx.isMuted());
     sfx.listen();
     setCoarse(window.matchMedia("(pointer: coarse)").matches);
-    // "Play" links elsewhere on the page (project cards
+    // play links elsewhere on the page pick a game and scroll the arcade into view
     const pick = (e: Event) => {
       const k = GAMES.findIndex((g) => g.id === (e as CustomEvent<string>).detail);
       if (k < 0) return;
@@ -116,7 +116,7 @@ export default function Arcade() {
       cab.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     };
     window.addEventListener("arcade:pick", pick);
-    // test hook (only with ?dragon-debug in the address): the running game
+    // test hook for the Playwright bots, only with ?dragon-debug in the URL
     if (location.search.includes("dragon-debug")) (window as unknown as { __arcade: unknown }).__arcade = { game: () => game.current };
     return () => window.removeEventListener("arcade:pick", pick);
   }, []);
@@ -126,7 +126,7 @@ export default function Arcade() {
     if (!c || !g) return;
     const ctx = c.getContext("2d");
     if (!ctx) return;
-    // at most about 3 million pixels: full screen on a Retina laptop draws at about 1.5x
+    // cap at about 3 million pixels so full screen on a Retina laptop stays sharp and smooth
     const cw = c.clientWidth || W, dpr = Math.min(2, window.devicePixelRatio || 1, Math.max(1, Math.sqrt(3e6 / (cw * cw * H / W))));
     const pw = Math.round(cw * dpr), ph = Math.round((cw * H / W) * dpr);
     if (c.width !== pw || c.height !== ph) { c.width = pw; c.height = ph; }
@@ -134,12 +134,12 @@ export default function Arcade() {
     try {
       g.draw(ctx, performance.now() / 1000);
     } catch (err) {
-      // a drawing bug should never take the page down with it
+      // don't let a drawing bug take the whole page down
       console.error("arcade: draw failed", err);
     }
   }, []);
 
-  // a new game or level is chosen: build it and show its first frame behind the title card
+  // new game or level picked: build it and draw its first frame behind the title card
   useEffect(() => {
     if (!unlocked(level)) { setLevel(0); return; }
     game.current = GAMES[idx].make(level);
@@ -148,7 +148,7 @@ export default function Arcade() {
     paint();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idx, level, paint]);
-  // switching game always starts from its first level that is not yet cleared
+  // switching games starts at the first level you haven't cleared
   const pickGame = (i: number) => {
     sfx.play("click");
     const p = progress[GAMES[i].id];
@@ -156,7 +156,7 @@ export default function Arcade() {
     setIdx(i); setLevel(next);
   };
 
-  // full screen: a fixed layer over the page
+  // full screen: fixed layer over the page, plus real full screen where the browser supports it
   const enterFull = useCallback(() => {
     setFull(true);
     const el = screen.current as (HTMLDivElement & { webkitRequestFullscreen?: () => Promise<void> }) | null;
@@ -170,7 +170,7 @@ export default function Arcade() {
         }).catch(() => {});
       }
     } catch {
-      // the fixed layer alone is enough (iPhone Safari has no element full screen)
+      // the fixed layer is enough (iPhone Safari has no element full screen)
     }
   }, [coarse]);
   const exitFull = useCallback(() => {
@@ -194,7 +194,7 @@ export default function Arcade() {
     return () => root.classList.remove("arcade-playing");
   }, [mode]);
 
-  // in full screen the canvas is fitted, 16:9, inside whatever room the screen leaves
+  // in full screen, fit the 16:9 canvas into whatever space is left
   useEffect(() => {
     const s = stage.current, c = cv.current;
     if (!s || !c) return;
@@ -203,7 +203,7 @@ export default function Arcade() {
       const r = s.getBoundingClientRect();
       const w = Math.min(r.width, (r.height * W) / H);
       c.style.width = `${Math.floor(w)}px`; c.style.height = `${Math.floor((w * H) / W)}px`;
-      // where the game ends, so the touch controls in portrait can take the space below it
+      // bottom of the game, so the portrait touch controls can sit below it
       s.style.setProperty("--cv-b", `${c.offsetTop + c.offsetHeight}px`);
       paint();
     };
@@ -231,7 +231,7 @@ export default function Arcade() {
     cv.current?.focus({ preventScroll: true });
   };
 
-  // the loop runs only while playing
+  // loop only runs while playing
   useEffect(() => {
     if (mode !== "play") return;
     let raf = 0, last = 0, acc = 0, prevFire = false, prevAlt = false, hudAt = 0;
@@ -268,17 +268,17 @@ export default function Arcade() {
         go("paused");
         return;
       }
-      // only once a step has used them: on 120 Hz screens some frames run no step, and a press must not be lost
+      // clear presses only after a step used them
       if (!first) { prevFire = fire; prevAlt = alt; drag.current = 0; }
       paint();
       if (now - hudAt > 120) { hudAt = now; setHud(g.hud()); }
       if (g.state !== "play") {
-        // let the last explosion play out for a moment before the result card
+        // let the last explosion play out before showing the result
         cancelAnimationFrame(raf);
         const end = performance.now();
         const tail = (n: number) => {
           if (modeRef.current !== "play") return;
-          try { g.step(1 / 60, blankInput()); } catch { /* the result still shows */ }
+          try { g.step(1 / 60, blankInput()); } catch { /* still show the result */ }
           paint();
           if (n - end < 1100) raf = requestAnimationFrame(tail);
           else finish(g);
@@ -304,15 +304,15 @@ export default function Arcade() {
       },
     };
     setProgress(next);
-    try { localStorage.setItem(SAVE, JSON.stringify(next)); } catch { /* progress just is not kept */ }
+    try { localStorage.setItem(SAVE, JSON.stringify(next)); } catch { /* progress just won't save */ }
     setHud(g.hud());
     setResult({ won, text: g.result(), best: isBest, stars, goals: g.goals() });
     go("over");
-    // one chime per star, in turn
+    // one chime per star
     stars.forEach((s, k) => { if (s) setTimeout(() => sfx.play("star"), 350 + k * 280); });
   };
 
-  // keys are only taken while a game is being played, so the page scrolls normally otherwise
+  // only grab keys while a game is running so the page still scrolls normally
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (modeRef.current === "play") {
@@ -327,7 +327,7 @@ export default function Arcade() {
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
     document.addEventListener("visibilitychange", hide);
-    // scrolled away mid-game: it pauses
+    // pause if you scroll away mid game
     const io = new IntersectionObserver(([en]) => { if (!en.isIntersecting && modeRef.current === "play") go("paused"); }, { threshold: 0.25 });
     if (screen.current) io.observe(screen.current);
     const rs = () => paint();

@@ -5,7 +5,7 @@ import { dragonBus } from "./dragonBus";
 import { sound } from "./astroSound";
 import "./dragon.css";
 
-// two original Eastern serpent dragons and the living world they fly over
+// my two dragons and the world they fly over
 
 import type { P, Spark, Wall, Phase, GameKind, Lantern } from "./dragon/types";
 import { Creature, inRect, type Box } from "./dragon/creature";
@@ -15,7 +15,7 @@ import { World, type Sky } from "./dragon/world";
 import { Avoid, Duel, Wander, fireMeets, homeward, DUEL_LEN } from "./dragon/brains";
 import { makeGame, roman, clock, trialPlan, fitCap, clearPoints, newState, medal, nextMedal, BONUS } from "./dragon/game";
 
-// point a dragon at another canvas (Dravoxus moves to the lair canvas while it guards the hero)
+// move a dragon onto another canvas (Dravoxus uses the lair canvas while guarding the hero)
 const drawOn = (c: Creature, g: CanvasRenderingContext2D) => {
   const x = c as unknown as { ctx: CanvasRenderingContext2D; parts: ReturnType<typeof makeParts> };
   if (x.ctx === g) return;
@@ -30,7 +30,7 @@ const BEST = "dragon-best";
 const BEST_SCORE = "dragon-best-score";
 const LEVELS = "dragon-trial-levels";
 const SIEGE_BEST = "dragon-siege-best";
-// a trial's record: times cleared, most sand left (s), fastest clear (s)
+// Trial record: times cleared, most sand left (s), fastest clear (s)
 type LevelRec = { clears: number; left: number; fast: number };
 // what the result card shows
 type Result = {
@@ -44,7 +44,7 @@ const readJson = <T,>(key: string, fallback: T): T => {
 const writeJson = (key: string, v: unknown) => { try { localStorage.setItem(key, JSON.stringify(v)); } catch {} };
 const IGNORE = "header.top, a, button, input, textarea, select, label, [role=radio], [role=tab], .board, .palette, .dragon-ui, .game-card";
 
-// rail icons: a cave mouth (lair), a slit dragon eye (summon), an open sky (release), crossed blades (trials)
+// rail icons: cave (lair), dragon eye (summon), open sky (release), crossed blades (trials), two flames (duel)
 const LairIcon = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true">
     <path d="M3 21V12a9 9 0 0 1 18 0v9" />
@@ -149,7 +149,7 @@ export default function Dragon() {
     pausedRef.current = on;
     setPaused(on);
   };
-  // the game menu (from the Trials button, or back from a game)
+  // game menu (from the Trials button or back from a game)
   const openMenu = (from?: GameKind) => {
     if (from === undefined) { gameRef.current = "trial"; setGame("trial"); }
     cmdRef.current = "clear";
@@ -159,11 +159,11 @@ export default function Dragon() {
   const pick = (g: GameKind) => {
     gameRef.current = g;
     setGame(g);
-    // the siege's dragon, Balerian, flies in
+    // Balerian flies in for the siege
     cmdRef.current = g === "siege" ? "stage" : "clear";
     go("intro");
   };
-  // a trial's stats card, before it starts
+  // Trial stats card before it starts
   const brief = (n: number, fresh = false) => {
     if (fresh) newRunRef.current = true;
     levelRef.current = n;
@@ -188,13 +188,13 @@ export default function Dragon() {
     go("off");
   };
 
-  // the "breathe fire" hint shows beside the rail for a few seconds, then gets out of the way
+  // breathe fire hint next to the rail for a few seconds
   useEffect(() => {
     const id = window.setTimeout(() => setHint(false), 7000);
     return () => clearTimeout(id);
   }, []);
 
-  // while a game is open the page stays still
+  // page stays still while a game is open
   useEffect(() => {
     if (phase === "off") return;
     const prev = document.body.style.overflow;
@@ -237,7 +237,7 @@ export default function Dragon() {
     let pointer: P | null = null;
     let lastMove = -99;
     let holding = false;
-    // once it has reached a resting cursor it glides on instead of circling it, until the cursor moves again
+    // once it reaches a resting cursor it glides on instead of circling, until the cursor moves
     let settled = false;
     let settledAt: P = { x: 0, y: 0 };
     let settledT = 0;
@@ -248,13 +248,13 @@ export default function Dragon() {
     let slowUntil = 0;
     let lastFlare = 0, lastShake = 0, meets = 0;
     let balGuarding = false;
-    // where two streams of fire meet and fight: a glowing core that grows while they keep meeting
+    // where two fire streams meet: a glowing core that grows while they keep meeting
     const core = { x: 0, y: 0, p: 0 };
     const dbgTg: P[] = [{ x: 0, y: 0 }, { x: 0, y: 0 }];
     const landed = [0, 0];
     let header: HTMLElement | null = null;
     let skills: HTMLElement | null = null;
-    // page measurements are read once per frame (each read can make the browser recalculate the layout)
+    // read page measurements once per frame since each read can force a layout
     let stamp = 0, hbAt = -1, hbVal = 0, rtAt = -1, rtVal = 0;
     const headerBottom = () => {
       if (hbAt === stamp) return hbVal;
@@ -262,7 +262,7 @@ export default function Dragon() {
       hbAt = stamp;
       return (hbVal = header ? Math.max(0, header.getBoundingClientRect().bottom) : 0);
     };
-    // Balerian's territory starts at the top of the skills section and runs to the end of the page
+    // Balerian's area starts at the top of the skills section and goes to the bottom of the page
     const regionTop = () => {
       if (rtAt === stamp) return rtVal;
       if (!skills || !skills.isConnected) skills = document.getElementById("skills");
@@ -282,7 +282,7 @@ export default function Dragon() {
     const glowHot = glow([[0, "rgba(255, 250, 225, 0.95)"], [0.5, "rgba(255, 200, 90, 0.7)"], [1, "rgba(120, 20, 0, 0)"]]);
     const glowMid = glow([[0, "rgba(255, 190, 70, 0.9)"], [0.5, "rgba(255, 110, 20, 0.65)"], [1, "rgba(120, 20, 0, 0)"]]);
     const glowCool = glow([[0, "rgba(230, 80, 15, 0.8)"], [0.5, "rgba(150, 30, 5, 0.5)"], [1, "rgba(120, 20, 0, 0)"]]);
-    // test hook: with ?dragon-debug in the address, every step is recorded for motion checks
+    // test hook: with ?dragon-debug in the URL every step gets recorded for the motion tests
     const prof = { step: 0, draw: 0, n: 0 };
     const trace: Record<string, number>[] | null = location.search.includes("dragon-debug") ? [] : null;
     let lastScroll = window.scrollY;
@@ -291,10 +291,10 @@ export default function Dragon() {
     let recallUntil = 0, recallEnd = 0;
     let dravChasing = false;
     const chasingNow = () => dravChasing;
-    // the trial: reached a pointer that has stopped, it glides slowly on (gameGlide) until the pointer moves again
+    // Trial: once it reaches a pointer that stopped, it glides on slowly (gameGlide) until the pointer moves
     let gameSettled = false, gameAt: P = { x: 0, y: 0 }, gameGlide: P = { x: 0, y: 0 };
     const G = newState();
-    // the dragon you fly in the game: Dravoxus in the trial, Balerian in the siege
+    // the dragon you control: Dravoxus in the trial, Balerian in the siege
     const player = () => (gameRef.current === "siege" ? bal : drav);
     const pw = new Wander();
     let wasInGame = false;
@@ -302,7 +302,7 @@ export default function Dragon() {
     const gameOn = () => phaseRef.current !== "off";
     const lair = () => modeRef.current === "lair" && !duel.on;
 
-    // where Dravoxus may fly: the whole viewport in the game, only the hero when sent to its lair
+    // where Dravoxus can fly: the whole viewport in a game, just the hero when banished
     const view = (): Box => ({ x0: 0, y0: headerBottom() + 12, x1: w, y1: h });
     const bounds = (): Box => {
       if (gameOn()) return { x0: 0, y0: 0, x1: w, y1: h };
@@ -319,16 +319,15 @@ export default function Dragon() {
       const b = bounds();
       return p.x >= b.x0 && p.x <= b.x1 && p.y >= b.y0 && p.y <= b.y1;
     };
-    // where Balerian flies: the visible part of its territory, in the content column (clear of the margin walls)
+    // where Balerian flies: the visible part of its area, inside the content column (away from the margin walls)
     const balBox = (): Box => {
       const v = view(), top = regionTop();
       const x0 = world.wide ? world.margin + 10 : v.x0, x1 = world.wide ? w - world.margin - 10 : v.x1;
-      // too little of its territory on screen to fly in properly (a thin strip at the bottom): it waits out of sight
+      // only a thin strip of its area is showing, so wait out of sight
       if (top > h - Math.max(300 * s, (h - v.y0) * 0.45)) return { x0, y0: h + 150 * s, x1, y1: h + 360 * s };
       return { x0, y0: Math.max(v.y0, top + 30 * s), x1, y1: h - 20 * s };
     };
     const sceneWalls = () => (world.live ? world.walls : []);
-    // in the game the screen edges are walls too, so the dragon glides along them instead of pinning in a corner
     const edgeWalls = (): Wall[] => [
       { x: -1000, y: -1000, w: w + 2000, h: 1000 + 4, seed: 0, ghost: true },
       { x: -1000, y: h - 4, w: w + 2000, h: 1000, seed: 0, ghost: true },
@@ -347,31 +346,31 @@ export default function Dragon() {
     const wallsFor = (k: 0 | 1): Wall[] => {
       if (gameOn()) return k === 0 ? [...G.walls, ...edgeWalls()] : [];
       const base = k === 0 && lair() ? [] : sceneWalls();
-      // Balerian never flies above its territory: the top of the skills section is a wall to it
+      // Balerian never goes above its area, the top of skills is a wall for it
       if (k === 1 && !duel.on) {
         const top = regionTop();
         return [...base, { x: -1e5, y: -1e5, w: 2e5, h: 1e5 + top + 4 * s, seed: 0, ghost: true }];
       }
-      // in a duel the screen edges are soft walls too, so neither dragon swings out of the frame
+      // screen edges are soft walls during a duel so neither swings out of frame
       return duel.on ? [...base, ...duel.wallsFor(k, D[k]), ...duelEdges()] : base;
     };
-    // wander targets keep clear of the other dragon's head and of its whole body
+    // wander targets stay away from the other dragon's head and body
     const badGreen = (p: P) => {
       const g = dragonBus.guard;
-      // while Balerian guards the skill wheel, the wheel and its rim are its ground
+      // while guarding the skill wheel, the wheel and its rim are Balerian's turf
       if (balGuarding && g && Math.hypot(p.x - g.cx, p.y - g.cy) < g.r + 170 * s) return true;
       if (crosses(drav, bal, p) || Math.hypot(p.x - rw.at.x, p.y - rw.at.y) < 300 * s) return true;
       return bal.alpha > 0.5 && (Math.hypot(p.x - bal.seg[0].x, p.y - bal.seg[0].y) < 240 * s || bal.bodyGap(p).gap < 150 * s);
     };
     const badRed = (p: P) => crosses(bal, drav, p) || Math.hypot(p.x - gw.at.x, p.y - gw.at.y) < 300 * s || Math.hypot(p.x - drav.seg[0].x, p.y - drav.seg[0].y) < 260 * s || drav.bodyGap(p).gap < 150 * s;
-    // a spot it could only reach by flying across the other dragon's body is never chosen
+    // never pick a spot it could only reach by flying across the other dragon (that's how they got tangled)
     const crosses = (me: Creature, o: Creature, p: P) => {
       if (o.alpha < 0.5) return false;
       const hd = me.seg[0];
       for (let u = 0.15; u < 1; u += 0.14) if (o.bodyGap({ x: hd.x + (p.x - hd.x) * u, y: hd.y + (p.y - hd.y) * u }).gap < 70 * s) return true;
       return false;
     };
-    // both on the screen together: lanterns are shared out
+    // both on screen: Balerian takes lanterns on the left half, Dravoxus the right
     const together = () => !duel.on && !gameOn() && !lair() && bal.alpha > 0.5 && onScreen(drav) && onScreen(bal);
     const lanternHalf = (k: 0 | 1, b: Box): Box => !together() ? b : k === 0 ? { ...b, x0: Math.max(b.x0, w / 2) } : { ...b, x1: Math.min(b.x1, w / 2) };
     let wasTogether = false;
@@ -379,7 +378,7 @@ export default function Dragon() {
     const railTop = () => {
       const r = railRef.current?.getBoundingClientRect();
       if (!r) return null;
-      // the rail is centred, so the Duel button (when it appears) grows it by half its height at the top
+      // the rail is centred, so the Duel button grows it by half its height at the top
       const extra = duelReadyRef.current ? 0 : r.height / (r.height > 260 ? 6 : 5);
       return new DOMRect(r.x, r.y - extra, r.width, r.height + extra * 2);
     };
@@ -387,14 +386,14 @@ export default function Dragon() {
     let laidW = 0, laidH = 0;
     const resize = () => {
       w = window.innerWidth; h = window.innerHeight;
-      // sharpness budget: about 3 million pixels per full-screen canvas
+      // pixel budget of about 3 million per full screen canvas
       const keep = w === laidW && Math.abs(h - laidH) <= 140 && canvas.width > 0 && canvas.height >= Math.round(h * dpr);
       if (!keep) dpr = Math.min(window.devicePixelRatio || 1, 2, Math.max(1, Math.sqrt(3e6 / Math.max(1, w * h))));
       const was = s;
       s = w < 700 ? 0.62 : w < 1100 ? 0.85 : 1;
       if (drav.seg.length && was !== s) for (const c of D) c.rescale(s / was);
       if (!keep) {
-        // room for the address bar to hide without a rebuild
+        // extra room so the address bar can hide without a rebuild
         const ch = w === laidW ? Math.max(h, laidH) : h;
         for (const [cv, cx] of [[canvas, ctx], [scene, sctx]] as const) {
           cv.width = Math.round(w * dpr);
@@ -406,16 +405,16 @@ export default function Dragon() {
       }
       if (!drav.seg.length) {
         drav.place(w * 0.78, h * 0.32, Math.PI);
-        // Balerian starts below the screen and flies up into its territory when that comes into view
+        // Balerian starts below the screen and flies up when its area comes into view
         bal.place(w * 0.3, h + 260 * s, -Math.PI / 2 + 0.3);
       }
-      // a phone's address bar showing or hiding changes only the height a little
+      // address bar showing or hiding only changes the height a bit, so keep the town and walls
       if (w !== laidW || Math.abs(h - laidH) > 140) {
         laidW = w; laidH = h;
         world.layout(w, h, s, dpr, headerBottom(), railTop(), town);
       } else world.h = h;
       document.documentElement.style.setProperty("--rule-top", `${Math.round(header?.offsetHeight ?? headerBottom())}px`);
-      // redraw at once, so the resized (cleared) canvas never shows empty for a frame
+      // redraw right away so the cleared canvas never shows empty for a frame
       stamp++;
       if (keep) return;
       sceneTick = 1;
@@ -427,7 +426,7 @@ export default function Dragon() {
       get s() { return s; }, get w() { return w; }, get h() { return h; }, get t() { return t; }, get dpr() { return dpr; }, get seg() { return drav.seg; },
     });
     const { build, startSiege: siegeStart, stepSiege, burned, fuelStep } = game;
-    // a trial cleared (points, records) or failed
+    // Trial cleared (points, records) or failed
     const finishTrial = (won: boolean) => {
       const L = levelRef.current;
       let base = 0, bonus = 0, best = false;
@@ -453,7 +452,7 @@ export default function Dragon() {
       setResult({ ...NO_RESULT, kind: "trial", won, base, bonus, spare: Math.ceil(G.time), done: G.total - G.left, total: G.total, score: G.score, burned: G.burned, time: G.elapsed, best });
       go(won ? "won" : "lost");
     };
-    // the siege lost: its record is kept (best score, and longest time survived)
+    // Siege lost: save the best score and longest time
     const finishSiege = () => {
       const prev = readJson(SIEGE_BEST, { score: 0, time: 0 });
       const best = G.score > prev.score;
@@ -463,7 +462,7 @@ export default function Dragon() {
       setResult({ ...NO_RESULT, kind: "siege", score: G.score, burned: G.burned, time: G.elapsed, plain: G.plain, great: G.great, jade: G.jade, escaped: G.escaped, best });
       go("lost");
     };
-    // a lantern escaped in the siege: a jolt, and when the last of the dragon's health goes, a final burst
+    // a lantern escaped in the siege: a jolt, and a final burst when health runs out
     const onHurt = (dmg: number) => {
       shake(dmg > 10);
       if (G.health <= 0) {
@@ -485,7 +484,7 @@ export default function Dragon() {
         wd.at.y -= ds;
       };
       if (lair()) ride(drav, gw);
-      // Balerian is carried down only as far as it must be to stay inside its territory
+      // only carry Balerian as far as needed to stay in its area
       if (ds < 0 && !duel.on) {
         let top = Infinity;
         for (let i = 0; i < bal.seg.length; i += 4) top = Math.min(top, bal.seg[i].y);
@@ -494,7 +493,7 @@ export default function Dragon() {
           bal.shift(0, need);
           for (const p of sparks) if (p.own === bal.id) { p.y += need; if (p.py !== undefined) p.py += need; }
           rw.at.y += need;
-          // pushed onto Dravoxus: Dravoxus is carried along too, so one never passes through the other
+          // pushed into Dravoxus, so carry Dravoxus too so they never pass through each other
           if (!lair()) {
             let g = Infinity;
             for (let i = 0; i < drav.seg.length; i += 3) g = Math.min(g, bal.bodyGap(drav.seg[i]).gap - drav.rad(i));
@@ -522,7 +521,7 @@ export default function Dragon() {
       canvas.classList.add(strong ? "quake-hard" : "quake");
     };
 
-    // walls solidify only when no dragon is in the way, so nothing is ever trapped inside one
+    // walls only turn solid when no dragon is in the way, so nothing gets trapped inside
     const settleWalls = () => {
       if (world.live || !world.walls.length) return;
       for (const c of D) {
@@ -532,10 +531,10 @@ export default function Dragon() {
       world.live = true;
     };
 
-    // ---------- Dravoxus (green): roams anywhere, follows when summoned, guards the hero when banished ----------
+    // Dravoxus (green): roams anywhere, follows when summoned, guards the hero when banished
     const stepDrav = (inGame: boolean) => {
       const c = drav;
-      // in the games: the trial's dragon is flown by you; in the siege it fades away until the game is over
+      // in games: you fly it in the trial, in the siege it fades out until the game ends
       c.alpha = Math.max(0, Math.min(1, c.alpha + (inGame && player() !== drav ? -0.06 : 0.03)));
       if (inGame) {
         if (player() === drav) stepPlayer(c);
@@ -547,21 +546,21 @@ export default function Dragon() {
         gw.pick(t, bounds(), wallsFor(0), s, badGreen, c);
       }
       const follow = modeRef.current === "follow";
-      // summoned: it comes straight back to you within a few seconds, fast while far and easing in as it arrives
+      // summoned: comes back to you within a few seconds, fast when far and slowing as it arrives
       if (follow !== wasFollow) {
         wasFollow = follow;
         if (follow && !inGame) { recallUntil = t + 3.4; recallEnd = t + 8; settled = false; }
       }
-      // far off the screen and out of sight (set free from its lair, or summoned from far away)
+      // way off screen (released from the lair or summoned from far away): move it to just past the nearest edge
       if (!inGame && !lair() && !duel.on) bringNear(c);
-      // in its lair while the lair is scrolled out of view: once it is wholly out of sight it is simply there
+      // in the lair while the lair is scrolled away: once it's fully out of sight it's just there
       if (!inGame && lair()) intoLair(c);
-      // (It keeps coming until it has actually arrived, even if something slowed it on the way.)
+      // (keeps coming until it actually arrives, even if something slowed it down)
       const recall = !inGame && !duel.on && follow && t < recallEnd;
       const chasing = !duel.on && pointer && (inGame || (follow && !settled && (recall || t - lastMove < 3.5) && inside(pointer)));
       dravChasing = !!chasing;
       if (duel.on) {
-        // the duel is choreographed: its moves are made by the duel itself
+        // duel moves are handled by the duel itself
         duel.drive(0, t, D, s, duelFx);
         c.eyes(bal.seg[0], t);
         c.fire(sparks, t, c.range(), 0.45);
@@ -580,26 +579,26 @@ export default function Dragon() {
         tg = home ?? c.holdFire ?? c.fireAt ?? back ?? (inGame && gameSettled ? gameGlide : chasing ? pointer! : gw.at);
         const dist = Math.hypot(tg.x - c.seg[0].x, tg.y - c.seg[0].y);
         top = (inGame ? (gameSettled ? 2.6 : 5.2) : c.holdFire ? 1.6 : chasing || c.fireAt || dist > 450 * s ? 4.4 : 2.6) * s;
-        // banished while away from its lair: it heads off there briskly, not at a stroll
+        // banished while away from the lair, so head back quickly
         if (!inGame && lair() && !inside(c.seg[0]) && !c.fireAt) top = Math.max(top, 7 * s);
         if (recall) {
-          // fast enough to be back with time to spare, never slower than its usual chase
+          // fast enough to get back with time to spare, never slower than its normal chase
           const left = Math.max(0.6, recallUntil - t - 0.7);
           top = Math.max(4.4 * s, Math.min(11 * s, (dist / (left * 60)) * 1.7));
           if (dist < 170 * s) recallUntil = recallEnd = 0;
         }
-        // reached the resting cursor: glide on past it rather than looping round it
+        // reached the resting cursor, glide past instead of looping around it
         if (chasing && !inGame && !recall && dist < 120 * s) settleOff();
       }
-      // it keeps an eye on its rival when the two are near (in a duel, always), and turns its head a little to look
+      // keeps an eye on the rival when they're close (always in a duel) and turns its head a bit to look
       dbgTg[0] = tg;
-      // in a duel it turns its head to face its rival
+      // in a duel it turns its head to face the rival
       c.glance = !inGame && duel.on ? bal.seg[0] : null;
       c.eyes(!inGame && (duel.on || near(c, bal, 460)) ? bal.seg[0] : pointer && !inGame && t - lastMove < 12 && inside(pointer) ? pointer : tg, t);
-      // in the trial it turns more sharply while chasing your pointer; resting
+      // in the trial it turns sharper while chasing your pointer, and drifts like normal when resting
       const drift = inGame && gameSettled && !c.holdFire && !c.fireAt, scr = { x0: 0, y0: 0, x1: w, y1: h };
       c.move(tg, { top, base: inGame && !drift ? 0.1 : 0.065, walls: wallsFor(0), others: inGame ? [] : [bal], steer: steer.bias, slow: steer.slow, area: drift ? scr : inGame ? undefined : bounds(), edge: drift ? nearEdge(c, scr) : !inGame && nearEdge(c, bounds()) });
-      // caught circling, or pinned: fly out the most open way, and stop chasing a resting cursor
+      // circling or pinned: fly out the most open way and stop chasing a resting cursor
       if (!duel.on && (c.looping || c.stuck === 49)) {
         const b = bounds();
         gw.set(c.escape(wallsFor(0), { x: (b.x0 + b.x1) / 2, y: (b.y0 + b.y1) / 2 }), t, 2.5);
@@ -607,13 +606,13 @@ export default function Dragon() {
       }
       c.fire(sparks, t, inGame ? Infinity : c.range(), duel.on ? 0.42 : 0.4);
     };
-    // ---------- The dragon you fly in a game (either one
+    // the dragon you fly in a game (both handle the same) It chases your pointer
     const stepPlayer = (c: Creature) => {
       const scr = { x0: 0, y0: 0, x1: w, y1: h }, walls = [...G.walls, ...edgeWalls()];
       const playing = phaseRef.current === "play";
       if (pointer) {
         if (holding && playing && !G.overheat) {
-          // aim first: the flame starts only once its head is on the spot (fire() starts it)
+          // aim first: fire only starts once the head is on the spot
           const at = { x: pointer.x, y: pointer.y }, hd0 = c.seg[0];
           const err = Math.abs(Math.atan2(Math.sin(Math.atan2(at.y - hd0.y, at.x - hd0.x) - c.dirAt(0)), Math.cos(Math.atan2(at.y - hd0.y, at.x - hd0.x) - c.dirAt(0))));
           if (c.breath > 0 && c.holdFire) {
@@ -627,7 +626,7 @@ export default function Dragon() {
           gameAt = { x: pointer.x, y: pointer.y };
           pw.pick(t, scr, G.walls, s, () => false, c);
         }
-        // breathing at something well off to the side or behind: it brakes and turns on the spot to face it
+        // breathing at something way off to the side or behind
         const q = c.holdFire ?? c.fireAt ?? (gameSettled ? null : pointer);
         if (q) {
           const hd0 = c.seg[0], a = Math.atan2(q.y - hd0.y, q.x - hd0.x), off = Math.abs(Math.atan2(Math.sin(a - c.course), Math.cos(a - c.course)));
@@ -635,25 +634,25 @@ export default function Dragon() {
           if (off > (c.holdFire || c.fireAt ? 0.8 : 1.2) && (near || c.holdFire || c.fireAt)) { c.speed = Math.max(1.1 * s, c.speed * 0.92); c.turnBoost = Math.max(c.turnBoost, 0.7); }
         }
       }
-      // resting (or no pointer at all): a slow, lazy drift on ahead (each next spot lies ahead within a gentle turn)
+      // resting or no pointer: slow lazy drift forward
       if ((gameSettled || !pointer) && pw.due(t, c, s)) pw.pick(t, scr, G.walls, s, () => false, c);
       gameGlide = pw.at;
       const tg = c.holdFire ?? c.fireAt ?? (gameSettled || !pointer ? gameGlide : pointer!);
       c.glance = null;
       c.eyes(pointer ?? tg, t);
-      // chasing your pointer it turns sharply; resting, it drifts exactly as it roams the page
+      // sharp turns while chasing, normal drift while resting
       const drift = (gameSettled || !pointer) && !c.holdFire && !c.fireAt;
       c.move(tg, { top: (drift ? 2.6 : 5.2) * s, base: drift ? 0.065 : 0.1, walls, others: [], area: drift ? scr : undefined, edge: drift && nearEdge(c, scr) });
       if (c.looping || c.stuck === 49) pw.set(c.escape(walls, { x: w / 2, y: h / 2 }), t, 2.5);
       c.fire(sparks, t, Infinity, 0.4);
     };
-    // the whole body (and its shadow) is off the screen
+    // whole body (and shadow) is off screen
     const offView = (c: Creature, m = 110 * s) => {
       let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
       for (let i = 0; i < c.seg.length; i += 3) { const p = c.seg[i]; if (p.x < x0) x0 = p.x; if (p.x > x1) x1 = p.x; if (p.y < y0) y0 = p.y; if (p.y > y1) y1 = p.y; }
       return x1 < -m || x0 > w + m || y1 < -m || y0 > h + m;
     };
-    // put a dragon at (x, y) facing a, but only somewhere clear of the other one; tries spots along `along`
+    // put a dragon at (x, y) facing a, but only somewhere clear of the other one
     const placeClear = (c: Creature, x: number, y: number, a: number, along: P) => {
       const o = c === drav ? bal : drav, save = { seg: c.seg.map((p) => ({ ...p })), trail: c.trail.map((p) => ({ ...p })), course: c.course, face: c.face, heading: c.heading, speed: c.speed };
       for (const k of [0, 1, -1, 2, -2, 3, -3, 4, -4]) {
@@ -675,7 +674,7 @@ export default function Dragon() {
       let x: number, y: number, n: number;
       if (oy >= ox) { x = Math.max(120 * s, Math.min(w - 120 * s, hd.x)); y = hd.y < 0 ? -out : h + out; n = hd.y < 0 ? Math.PI / 2 : -Math.PI / 2; }
       else { y = Math.max(v.y0 + 120 * s, Math.min(h - 120 * s, hd.y)); x = hd.x < 0 ? -out : w + out; n = hd.x < 0 ? 0 : Math.PI; }
-      // facing in, turned partly toward where it is going
+      // facing in, turned partly toward where it's going
       const a = n + Math.max(-0.6, Math.min(0.6, wrapA(Math.atan2(g.y - y, g.x - x) - n)));
       if (!placeClear(c, x, y, a, oy >= ox ? { x: 1, y: 0 } : { x: 0, y: 1 })) return;
       c.speed = 4 * s;
@@ -707,17 +706,17 @@ export default function Dragon() {
       else gw.pick(t, bounds(), wallsFor(0), s, badGreen, c);
     };
 
-    // ---------- Balerian (red): keeps to the skills section and below, and guards the skill wheel ----------
+    // Balerian (red): stays in the skills section and below, guards the skill wheel
     const stepBal = (inGame: boolean) => {
       const c = bal;
-      // it leaves while the trial is played (and comes back after); in the siege it is the dragon you fly
+      // leaves during the trial (comes back after), in the siege it's the one you fly
       c.alpha = Math.max(0, Math.min(1, c.alpha + (inGame && player() !== bal ? -0.06 : 0.03)));
       if (inGame) {
         if (player() === bal) stepPlayer(c);
         return;
       }
       const box = balBox();
-      // the skill wheel asks it to guard the rim and to breathe at a rune when one is chosen
+      // the skill wheel asks it to guard the rim and breathe at a rune when one is picked
       const g = dragonBus.guard;
       const guard = !duel.on && !inGame && g && g.cy > regionTop() ? g : null;
       if (dragonBus.breathe) {
@@ -725,7 +724,7 @@ export default function Dragon() {
         dragonBus.breathe = null;
       }
       balGuarding = !!guard;
-      // far below the screen and out of sight (left behind by a hard scroll)
+      // way below the screen (left behind by a big scroll): move it to just below the edge, still out of sight
       if (!duel.on && !inGame && offView(c) && c.seg[0].y > h + 380 * s) {
         const tx = Math.max(box.x0 + 120 * s, Math.min(box.x1 - 120 * s, c.seg[0].x));
         const ty = box.y0 > h ? h + 220 * s : h + 170 * s;
@@ -748,17 +747,17 @@ export default function Dragon() {
           // circle the rim
           const hd = c.seg[0];
           const ha = Math.atan2(hd.y - guard.cy, hd.x - guard.cx);
-          // where the rim runs close to a wall or the edge of the screen, the path tucks inside it
+          // where the rim gets close to a wall or the screen edge, the path tucks inside so it doesn't swing out
           const clearOf = (x: number, y: number) => x > 110 * s && x < w - 110 * s && y < h - 100 * s && y > headerBottom() + 90 * s && !sceneWalls().some((wl) => inRect(x, y, wl, 95 * s));
           const rim = (a: number) => {
             let r = guard.r;
             while (r > guard.r * 0.5 && !clearOf(guard.cx + Math.cos(a) * r, guard.cy + Math.sin(a) * r)) r -= 8 * s;
             return { x: guard.cx + Math.cos(a) * r, y: guard.cy + Math.sin(a) * r };
           };
-          // inside the disc (after breathing), head straight back out to the rim instead of looping over the runes
+          // inside the disc after breathing, head straight back to the rim instead of looping over the runes
           const here = rim(ha), rimR = Math.hypot(here.x - guard.cx, here.y - guard.cy);
           const inner = Math.hypot(hd.x - guard.cx, hd.y - guard.cy) < rimR * 0.88;
-          // (While escaping from being pinned, the escape target stands.)
+          // (escape target wins if it's pinned)
           if (c.stuck === 0) rw.set(rim(ha + (inner ? 0.2 : 0.5)), t, 1);
           if (inner && !c.fireAt && !c.holdFire) c.turnBoost = Math.max(c.turnBoost, 0.6);
           if (c.fireAt) {
@@ -783,18 +782,18 @@ export default function Dragon() {
       c.glance = duel.on ? drav.seg[0] : null;
       c.eyes(duel.on || (!guard && near(c, drav, 460)) ? drav.seg[0] : tg, t);
       c.move(tg, { top, base: 0.065, walls: wallsFor(1), others: [drav], steer: steer.bias, slow: steer.slow, area: box.y0 < h && !guard ? box : undefined, edge: box.y0 < h && !guard && nearEdge(c, box) });
-      // caught circling (other than round the wheel, which is the point) or pinned: fly out the most open way
+      // circling (except around the wheel, which is the point) or pinned: fly out the most open way
       if (!duel.on && ((c.looping && !guard) || c.stuck === 49)) {
         rw.set(c.escape(wallsFor(1), { x: (box.x0 + box.x1) / 2, y: (box.y0 + box.y1) / 2 }), t, 2.5);
       }
       c.fire(sparks, t, guard ? 260 * s : c.range(), duel.on ? 0.42 : 0.4);
     };
 
-    // now and then, outside a duel, the two size each other up
+    // every now and then outside a duel, if they happen to be close and one is facing the other
     let skirmishAt = 30 + Math.random() * 30;
     let answer: { by: Creature; to: Creature; at: number; back: boolean } | null = null;
     const facing = (a: Creature, p: P) => Math.abs(Math.atan2(Math.sin(Math.atan2(p.y - a.seg[0].y, p.x - a.seg[0].x) - a.course), Math.cos(Math.atan2(p.y - a.seg[0].y, p.x - a.seg[0].x) - a.course)));
-    // one breathes a short burst at the other's body; the other always answers in kind
+    // one breathes a short burst at the other, the other always answers, turning to face it if needed
     let lastSkirmish = -99;
     const strike = (atk: Creature, def: Creature) => {
       lastSkirmish = t;
@@ -809,7 +808,7 @@ export default function Dragon() {
     const skirmish = () => {
       if (answer && t > answer.at) {
         const { by, to } = answer;
-        // still breathing or already aiming: it answers a moment later
+        // still breathing or aiming, so it answers a moment later
         if (by.fireAt || by.breath > 0) answer.at = t + 0.3;
         else {
           answer = null;
@@ -829,7 +828,7 @@ export default function Dragon() {
       strike(atk, def);
     };
 
-    // the duel's last moment: both stop face to face at the line; a flash, a shockwave
+    // end of the duel: both stop face to face at the line, then a flash, shockwave
     const clash = (p: P) => {
       burst(p.x, p.y, 30 * s, 110, 1.6);
       world.rings.push({ x: p.x, y: p.y, r: 60 * s, age: 0 });
@@ -842,7 +841,7 @@ export default function Dragon() {
       sound.roar();
     };
 
-    // the first strike's knock: heads meet at the line in a spray of sparks and a jolt
+    // first strike: heads meet at the line with sparks and a jolt
     const knock = (p: P) => {
       burst(p.x, p.y, 24 * s, 80, 1.35);
       world.rings.push({ x: p.x, y: p.y, r: 40 * s, age: 0 });
@@ -859,7 +858,7 @@ export default function Dragon() {
       if (cmd) {
         cmdRef.current = null;
         if (cmd === "build" || cmd === "buildNew") {
-          // a new run starts the score again; the next trial in a run keeps it
+          // new run resets the score, the next trial in a run keeps it
           if (cmd === "buildNew" || G.kind !== "trial") Object.assign(G, newState("trial"));
           build(levelRef.current);
         } else if (cmd === "siege") {
@@ -868,7 +867,7 @@ export default function Dragon() {
           if (hd.x < 40 || hd.x > w - 40 || hd.y < 40 || hd.y > h - 40) bal.place(w / 2, h * 0.68, -Math.PI / 2);
           resetAim(bal);
         } else if (cmd === "stage") {
-          // the siege's dragon arrives: low in the middle, facing up toward where the lanterns will rise
+          // siege dragon arrives low in the middle, facing up where the lanterns rise
           Object.assign(G, newState("siege"));
           bal.place(w / 2, h * 0.68, -Math.PI / 2);
           bal.alpha = 0;
@@ -878,7 +877,7 @@ export default function Dragon() {
         holding = false;
       }
       const inGame = gameOn();
-      // back from the games: Balerian, if it was flown outside its territory
+      // back from the games: if Balerian was flown outside its area, quietly move it below the screen
       if (wasInGame && !inGame) {
         const hd = bal.seg[0], bx = balBox();
         if (hd.x < bx.x0 || hd.x > bx.x1 || hd.y < bx.y0 || hd.y > bx.y1) {
@@ -890,7 +889,7 @@ export default function Dragon() {
         resetAim(drav);
       }
       wasInGame = inGame;
-      // the dragon's fire in a game: breathing drains it; spent, it must cool (smoking) before it lights again
+      // fire in a game: breathing drains it, and once empty it has to cool down (smoking) before it works again
       if (inGame && phaseRef.current === "play") {
         const pc = player();
         if (!fuelStep(t, pc.breath > 0 && pc.mouth > 0.55)) {
@@ -899,14 +898,14 @@ export default function Dragon() {
         }
       }
       const hb = headerBottom();
-      // duel: start on request, count down, end after 15 seconds
+      // duel: start on request, count down, end after 15s
       if (duelCmd.current) {
         duelCmd.current = false;
         if (!duel.on && !inGame) {
           const v = view();
-          // the arena: the screen below the navigation bar, mostly within Balerian's territory
+          // arena is the screen below the nav, mostly inside Balerian's area
           const box = { ...v, y0: Math.max(v.y0, Math.min(regionTop(), v.y0 + (v.y1 - v.y0) * 0.35)) };
-          // on wide screens, within the content column (clear of the town and its walls in the margins)
+          // on wide screens keep it in the content column, away from the town and walls
           if (world.wide) { box.x0 = world.margin + 20; box.x1 = w - world.margin - 20; }
           duel.start(t, D, box, s);
           for (const c of D) { c.fireAt = null; c.holdFire = null; c.aimFn = null; c.prey = null; c.firePower = 1.75; }
@@ -927,7 +926,7 @@ export default function Dragon() {
           for (const c of D) { c.breathLen = 0.75; c.firePower = 1; }
           setDuelHud(null);
           setDuelFx(null);
-          // after the clash they glide on away from each other
+          // after the clash they glide away from each other
           gw.part(() => bal.seg[0], t, 7);
           rw.part(() => drav.seg[0], t, 7);
           gw.pick(t, bounds(), wallsFor(0), s, badGreen, drav);
@@ -939,7 +938,7 @@ export default function Dragon() {
         }
       }
       settleWalls();
-      // room for the legs and spines when they pass each other (less in the duel, where blows must land on the body)
+      // room for legs and spines when they pass (less in the duel where hits need to land on the body)
       for (const c of D) c.pad = (duel.on ? 3 : 14) * s;
       {
         const tg = together();
@@ -951,17 +950,17 @@ export default function Dragon() {
       }
       stepDrav(inGame);
       stepBal(inGame);
-      // chance meeting: when their heads come close outside a duel, neither keeps flying at the other
+      // chance meeting: when their heads get close outside a duel, steering takes them past each other, eyes locked
       if (!duel.on && !inGame && bal.alpha > 0.9 && t > meetAt) {
         const a = drav.seg[0], b = bal.seg[0];
         if (Math.hypot(a.x - b.x, a.y - b.y) < 260 * s) {
           meetAt = t + 5;
-          // they drift apart: each picks its way on ahead and away from the other (no turning back on itself) ..
+          // they drift apart, each heading forward and away from the other..
           gw.part(() => bal.seg[0], t, 6);
           rw.part(() => drav.seg[0], t, 6);
           if (!chasingNow()) gw.pick(t, bounds(), wallsFor(0), s, badGreen, drav);
           if (!balGuarding) rw.pick(t, balBox(), wallsFor(1), s, badRed, bal);
-          // ..
+          // ...and sometimes the one facing the other breathes at it and gets an answer
           if (!calm() && t - lastSkirmish > 20 && Math.random() < 0.4) {
             const fa = facing(drav, b), fb = facing(bal, a), [atk, def] = fa < fb ? [drav, bal] : [bal, drav];
             if (Math.min(fa, fb) < 1.1 && !atk.fireAt && atk.breath <= 0) strike(atk, def);
@@ -970,7 +969,7 @@ export default function Dragon() {
       }
       if (!inGame) skirmish();
       if (!inGame) world.step(t, hb);
-      // rising lanterns burst when a dragon's body or face touches them
+      // rising lanterns pop when a dragon's body or face touches them
       if (!inGame) {
         for (let j = world.sky.length - 1; j >= 0; j--) {
           const o = world.sky[j];
@@ -999,7 +998,7 @@ export default function Dragon() {
         if (trace.length > 20000) trace.splice(0, 5000);
       }
 
-      // game lanterns: in the trial they drift in place; in the siege they rise
+      // game lanterns drift in place (trial) or rise (siege)
       const playing = phaseRef.current === "play";
       for (const o of G.lanterns) if (o.burst > 0) o.burst += 1 / 60;
       if (G.kind === "siege") { if (playing) stepSiege(t, onHurt); }
@@ -1018,7 +1017,7 @@ export default function Dragon() {
         p.life -= 1;
         if (!p.smoke && !p.fx) {
           if (fireWalls.some((wl) => !wl.ghost && inRect(p.x, p.y, wl))) {
-            // fire splashes off stone and brick; none of it passes through
+            // fire splashes off stone and brick, none goes through
             if (Math.random() < 0.25) sparks.push({ x: p.x - p.vx, y: p.y - p.vy, vx: -p.vx * 0.2 + (Math.random() - 0.5) * 2, vy: -p.vy * 0.2 - 1, life: 18, max: 18, r: 2 * s, smoke: false, fx: true });
             sparks.splice(k, 1);
             continue;
@@ -1048,7 +1047,7 @@ export default function Dragon() {
         if (p.life <= 0) sparks.splice(k, 1);
       }
       if (!inGame) {
-        // where the two streams of fire meet, they burst into white-gold sparks and flare
+        // where the two fire streams meet they burst into white gold sparks
         core.p *= 0.94;
         fireMeets(sparks, s, (x, y) => {
           meets++;
@@ -1061,7 +1060,7 @@ export default function Dragon() {
           if (t - lastFlare > 0.12) { lastFlare = t; world.rings.push({ x, y, r: 18 * s, age: 0 }); }
           if (duel.on && t - lastShake > 0.7) { lastShake = t; shake(); }
         });
-        // fire landing on the other dragon: it flinches once per breath
+        // fire hitting the other dragon, it flinches once per breath
         Duel.hits(sparks, D, (k, p, first) => {
           if (first) {
             landed[k]++;
@@ -1098,7 +1097,7 @@ export default function Dragon() {
         g.beginPath(); g.arc(x, y, p.r * (2.6 - q * 1.4), 0, Math.PI * 2); g.fill();
       }
       g.globalAlpha = 1;
-      // flames are drawn from three small pre-rendered glows (white-hot, orange, ember)
+      // flames use three pre-rendered glows (white hot, orange, ember) instead of a new gradient per spark per frame
       g.save();
       g.globalCompositeOperation = "lighter";
       for (const p of sparks) {
@@ -1117,14 +1116,14 @@ export default function Dragon() {
       if (inGame) {
         if (!sceneClear) { sctx.clearRect(0, 0, w, h); sceneClear = true; }
       } else {
-        // the town's lit windows and the rising lanterns change slowly: repainted 30 times a second, not 60 or 120
+        // town windows and lanterns change slowly, so only repaint them 30 times a second
         if (++sceneTick % 2 === 0 || sceneClear || slowFrame) world.drawScene(sctx, t);
         sceneClear = false;
       }
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
       if (pinned) {
-        // the lair canvas sits on the hero: screen positions are drawn shifted by where the hero is on screen
+        // lair canvas sits on the hero, so shift by where the hero is on screen
         lctx.setTransform(1, 0, 0, 1, 0, 0);
         lctx.clearRect(0, 0, lc.width, lc.height);
         lctx.setTransform(dpr, 0, 0, dpr, -heroX * dpr, -heroY * dpr);
@@ -1133,18 +1132,18 @@ export default function Dragon() {
       }
       if (inGame) { drawWalls(); drawLanterns(); }
       else world.drawWalls(ctx, dpr);
-      // Dravoxus in its lair, scrolled out of view, is not drawn
+      // Dravoxus in the lair while it's scrolled away isn't drawn
       const dravGone = !inGame && offView(drav);
       if (!offView(bal)) bal.draw(k);
       if (!dravGone) drav.draw(k);
 
       // fire and smoke
       if (sparks.length) {
-        // Dravoxus's own fire goes on the lair canvas with it while it is in the lair, so the two scroll together
+        // Dravoxus's fire goes on the lair canvas with it so they scroll together
         if (pinned) { drawSparks(ctx, k, (p) => p.own !== drav.id); drawSparks(lctx, k, (p) => p.own === drav.id); }
         else drawSparks(ctx, k, () => true);
       }
-      // the core where two streams of fire fight
+      // core where two fire streams fight
       if (core.p > 0.03) {
         const r = (30 + 80 * core.p) * s;
         ctx.save();
@@ -1156,12 +1155,12 @@ export default function Dragon() {
         ctx.restore();
       }
       world.drawRings(ctx);
-      // the scoreboard while a game is under way (not over the menu or a game's rules)
+      // scoreboard while a game is running (not over the menu or rules)
       const ph = phaseRef.current;
       if (inGame && (ph === "play" || ph === "won" || ph === "lost")) { drawFx(); drawHud(); }
     };
 
-    // the Duel button shows when Dravoxus (free or summoned
+    // duel button shows when Dravoxus (free or summoned, not in the lair) is in Balerian's area, both are on screen
     let frames = 0;
     const checkDuel = () => {
       const hb = headerBottom();
@@ -1174,9 +1173,10 @@ export default function Dragon() {
       }
     };
 
-    // fixed 60 steps a second regardless of screen refresh rate, so motion stays even on 120 Hz screens
+    // fixed 60 steps a second no matter the refresh rate, so motion stays even on 120Hz
     let last = 0, acc = 0;
     const rootEl = document.documentElement;
+    // when banished, Dravoxus lives in the hero, so it's drawn on its own canvas placed over the hero in the page
     let pinned = false, heroX = 0, heroY = 0, lairW = 0, lairH = 0, lairDpr = 0, lairTop = 0, lairLeft = 0;
     const pin = () => {
       const hero = lair() && !gameOn() ? document.querySelector(".hero") : null;
@@ -1188,11 +1188,11 @@ export default function Dragon() {
         }
         return;
       }
-      // a margin above and below, so a tail or a breath reaching past the hero's edge is not cut off
+      // margin above and below so a tail or breath past the hero's edge isn't cut off
       const b = hero.getBoundingClientRect(), pad = Math.round(220 * s);
       const r = { left: b.left, top: b.top - pad, width: b.width, height: b.height + pad * 2 };
       heroX = r.left; heroY = r.top;
-      // it moves onto the lair canvas only once all of it is inside that canvas
+      // only move it to the lair canvas once it's fully inside
       const within = (m: number) => drav.seg.every((p) => p.x > r.left + m && p.x < r.left + r.width - m && p.y > r.top + m && p.y < r.top + r.height - m);
       if (!pinned && within(40 * s)) {
         pinned = true;
@@ -1205,14 +1205,14 @@ export default function Dragon() {
         return;
       }
       if (!pinned) return;
-      // the canvas covers the whole hero and its margin (resized only when the hero itself changes size)
+      // canvas covers the hero plus margin, only resized when the hero size changes
       const cw = Math.ceil(r.width), ch = Math.ceil(r.height);
       if (Math.abs(cw - lairW) > 1 || Math.abs(ch - lairH) > 1 || lairDpr !== dpr) {
         lairW = cw; lairH = ch; lairDpr = dpr;
         lc.width = Math.round(cw * dpr); lc.height = Math.round(ch * dpr);
         lc.style.width = `${cw}px`; lc.style.height = `${ch}px`;
       }
-      // kept exactly on the hero, whatever element the canvas is positioned against
+      // keep it lined up exactly on the hero
       const m = lc.getBoundingClientRect();
       if (Math.abs(m.top - r.top) > 0.5 || Math.abs(m.left - r.left) > 0.5) {
         lairTop += r.top - m.top; lairLeft += r.left - m.left;
@@ -1222,9 +1222,9 @@ export default function Dragon() {
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
       stamp++;
-      // paused: everything holds still (the picture stays as it is)
+      // paused, everything holds still
       if (pausedRef.current) { last = now; draw(acc); return; }
-      // while an arcade game is being played the dragons hold still and stop drawing, so the game gets every frame
+      // while an arcade game is running the dragons freeze and stop drawing so the game gets every frame
       if (rootEl.classList.contains("arcade-playing") || rootEl.classList.contains("arcade-open")) { last = now; return; }
       acc += Math.min(4, last ? (now - last) / (1000 / 60) : 1) * (t < slowUntil ? 0.35 : 1);
       slowFrame = now - last > 24;
@@ -1238,13 +1238,13 @@ export default function Dragon() {
       }
       const p1 = trace ? performance.now() : 0;
       if (++frames % 12 === 0) checkDuel();
-      // draw between the last two steps, so motion and fire stay smooth on 90/120 Hz screens instead of stepping
+      // draw between the last two steps so it stays smooth on 90/120Hz screens
       pin();
       draw(acc);
       if (trace) { prof.step += p1 - p0; prof.draw += performance.now() - p1; prof.n++; }
     };
 
-    // touch screens have no hovering cursor, so Dravoxus does not chase a finger while you browse
+    // touch screens have no hover, so Dravoxus doesn't chase your finger while you browse
     const breatheAt = (x: number, y: number) => {
       if (duel.on || !inside({ x, y })) return;
       drav.breatheAt({ x, y }, t);
@@ -1252,13 +1252,13 @@ export default function Dragon() {
     const onMove = (e: PointerEvent) => {
       if (tap && e.pointerId === tap.id && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > 12) tap = null;
       if (e.pointerType === "touch" && !gameOn()) return;
-      // over the navigation bar Dravoxus ignores the cursor and keeps to the page
+      // over the nav Dravoxus ignores the cursor
       if (!gameOn() && ((e.target as Element | null)?.closest?.("header.top") || e.clientY < headerBottom())) {
         pointer = null;
         lastMove = -99;
         return;
       }
-      // only a real move away from where it settled (not a jiggle or a slow drift beside it) wakes the chase again
+      // only a real move away from where it settled wakes the chase again (not a jiggle), and not instantly
       if (!pointer || (Math.hypot(e.clientX - settledAt.x, e.clientY - settledAt.y) > 90 * s && t - settledT > 0.7)) settled = false;
       pointer = { x: e.clientX, y: e.clientY };
       lastMove = t;
@@ -1286,11 +1286,11 @@ export default function Dragon() {
     };
     const onUp = (e: PointerEvent) => {
       holding = false;
-      // let go before it had turned to face the spot: no late burst of fire
+      // let go before it turned to face the spot, so no late fire
       if (gameOn()) { const pc = player(); pc.fireAt = null; pc.breath = Math.min(pc.breath, 0.12); }
       if (tap && e.pointerId === tap.id && !gameOn() && performance.now() - tap.t < 350) {
         breatheAt(tap.x, tap.y);
-        // following on a phone: Dravoxus stays near the last tap
+        // following on a phone: stays near the last tap
         if (modeRef.current === "follow") { pointer = { x: tap.x, y: tap.y }; lastMove = t; settled = false; }
       }
       tap = null;
@@ -1311,10 +1311,10 @@ export default function Dragon() {
         aim: (k: number, x: number, y: number) => D[k].breatheAt({ x, y }, t),
         goto: (k: number, x: number, y: number) => (k ? rw : gw).set({ x, y }, t, 6),
         balBox,
-        // (Test hook) change the game's state directly (to reach a moment in it without playing that far)
+        // test hook: set the game state directly to jump to a point without playing there
         patchGame: (o: Record<string, unknown>) => Object.assign(G, o),
         buildLevel: (L: number) => { build(L); return { total: G.total, walls: G.walls.length }; },
-        // (Test hook) the game as it stands, and where the dragon you fly is
+        // test hook: the current game state and where your dragon is
         game: () => ({ kind: G.kind, fuel: G.fuel, overheat: G.overheat, score: G.score, burned: G.burned, health: G.health, elapsed: G.elapsed, time: G.time, start: G.start, left: G.left, total: G.total, over: G.over, escaped: G.escaped, great: G.great, jade: G.jade, plain: G.plain,
           lanterns: G.lanterns.map((o: Lantern) => ({ x: o.x, y: o.y, r: o.r, kind: o.kind, burst: o.burst, heat: o.heat, need: o.need })), walls: G.walls.map((wl) => ({ ...wl })), head: player().seg[0], dir: player().dirAt(0), phase: phaseRef.current, paused: pausedRef.current,
           holding, fireAt: player().fireAt, holdFire: player().holdFire, breath: player().breath, mouth: player().mouth, settled: gameSettled, pointer }),
@@ -1362,7 +1362,7 @@ export default function Dragon() {
       <div className="world-breath" aria-hidden="true" />
       <canvas ref={townRef} className="dragon-town" aria-hidden="true" />
       <canvas ref={sceneRef} className="dragon-scene" aria-hidden="true" />
-      {/* the duel darkens the page and lights each dragon's side in its own colour */}
+      {/* duel dims the page and lights each dragon's side in its colour */}
       <div className={`duel-veil${duelFx && !inGame ? " on" : ""}`} data-jade={duelFx ?? "left"} data-ember={opp[duelFx ?? "left"]} aria-hidden="true" />
       <div ref={flashRef} className="duel-flash" aria-hidden="true" />
       <div className={`duel-bars${duelFx && !inGame ? " on" : ""}`} aria-hidden="true"><i /><i /></div>

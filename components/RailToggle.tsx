@@ -1,6 +1,6 @@
 "use client";
 
-// on phones the dragon controls fold into one button in the corner (see dragon.css)
+// on phones the dragon controls collapse into one corner button so they don't cover the text or games
 import { useEffect, useState } from "react";
 
 export default function RailToggle() {
@@ -12,7 +12,7 @@ export default function RailToggle() {
     const close = (e: PointerEvent) => {
       const t = e.target as Element | null;
       if (t?.closest(".rail-toggle")) return;
-      // let the rail button's own click run first, then fold
+      // let the button's own click run first
       setTimeout(() => setOpen(false), t?.closest(".dragon-ui") ? 120 : 0);
     };
     document.addEventListener("pointerdown", close, true);

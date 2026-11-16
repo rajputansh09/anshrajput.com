@@ -1,14 +1,14 @@
-// artwork for the email banner: a dark Chinatown night behind the dragon crest
+// email banner art: Chinatown at night behind the dragon crest
 
 const W = 1200, H = 360;
 const CREST = { x0: 290, x1: 610, y0: 22, y1: 330 };
 const TEXT = { x0: 622, x1: 1040, y0: 104, y1: 284 };
 
-// deterministic "random" so the banner is identical on every render
+// seeded random so the banner comes out the same every time
 const rng = (seed: number) => () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
 const f = (n: number) => (Math.round(n * 10) / 10).toString();
 
-// one solid pagoda roof sitting on a wall top at (x, y), half-width rw: upturned eaves, sloped sides
+// one pagoda roof sitting on a wall at (x, y), half width rw
 export const roof = (x: number, y: number, rw: number, ridgeHalf: number | null) => {
   const e = rw + 10, lift = 9, ridge = ridgeHalf ?? rw * 0.32, top = y - 22;
   if (ridgeHalf !== null)
@@ -32,7 +32,7 @@ export const roof = (x: number, y: number, rw: number, ridgeHalf: number | null)
     `Q${f(x - rw * 0.8)} ${f(y - 4)} ${f(x - e)} ${f(y - lift)}Z`;
 };
 
-// a house of 1 to 3 tiers
+// house with 1 to 3 floors, each floor sitting on the roof below
 type House = { svg: string; left: number; right: number; top: number };
 const house = (x: number, base: number, w: number, tiers: number, lit: boolean, r: () => number, fill: string, stroke: string): House => {
   let svg = "", y = base, ww = w, top = base;
@@ -42,9 +42,9 @@ const house = (x: number, base: number, w: number, tiers: number, lit: boolean, 
     svg += `<rect x="${f(x - hw)}" y="${f(y - h)}" width="${f(ww)}" height="${h + 2}" fill="${fill}" stroke="${stroke}" stroke-width="1"/>`;
     if (lit) {
       if (i === 0) {
-        // door with an arched top, and a window either side
+        // arched door with a window on each side
         svg += `<path d="M${f(x - 6)} ${f(y)}V${f(y - 13)}Q${f(x)} ${f(y - 20)} ${f(x + 6)} ${f(y - 13)}V${f(y)}Z" fill="#020604"/>`;
-        // side windows only where there is room beside the door
+        // side windows only if there's room next to the door
         if (hw * 0.55 - 5 > 9) for (const k of [-1, 1]) if (r() < 0.8) svg += `<rect x="${f(x + k * hw * 0.55 - 5)}" y="${f(y - h + 8)}" width="10" height="12" rx="2" fill="#ffb347" opacity="${f(0.5 + r() * 0.35)}"/>`;
       } else if (r() < 0.75) {
         svg += `<rect x="${f(x - 5)}" y="${f(y - h + 6)}" width="10" height="11" rx="2" fill="#ffb347" opacity="${f(0.45 + r() * 0.4)}"/>`;
@@ -61,7 +61,7 @@ const house = (x: number, base: number, w: number, tiers: number, lit: boolean, 
   return { svg, left: x - half, right: x + half, top };
 };
 
-// a hanging paper lantern with a soft glow and tassel
+// hanging paper lantern with a glow and tassel
 const lantern = (x: number, len: number, s: number, glow: number) => {
   const cy = len + 5 * s + 22 * s;
   return `
@@ -77,12 +77,12 @@ const lantern = (x: number, len: number, s: number, glow: number) => {
 
 const overlaps = (a0: number, a1: number, b0: number, b1: number) => a0 < b1 && b0 < a1;
 
-// lay houses left to right without any two touching, keeping clear of the crest
+// place houses left to right without touching, skip the crest area, and only allow low houses under the title
 const row = (r: () => number, base: number, wMin: number, wMax: number, gap: number, maxTiers: number, lit: boolean, fill: string, stroke: string) => {
   let out = "", x = 6;
   while (x < W) {
     let w = wMin + r() * (wMax - wMin);
-    // near the right edge, shrink the last house to fit rather than dropping it
+    // shrink the last house to fit instead of dropping it
     if (x + (w * 0.62 + 12) * 2 > W - 6) w = Math.min(w, (W - 6 - x - 24) / 1.24);
     if (w < wMin * 0.5) break;
     const half = w * 0.62 + 12;
@@ -92,7 +92,7 @@ const row = (r: () => number, base: number, wMin: number, wMax: number, gap: num
     if (cx + half > W - 6) break;
     const tiers = underTitle ? 1 : Math.min(maxTiers, (lit ? 2 : 1) + Math.floor(r() * 2));
     const hs = house(cx, base, underTitle ? w * 0.8 : w, tiers, lit, r, fill, stroke);
-    // single-storey houses under the title must stay below it
+    // low houses under the title have to stay below it
     if (!underTitle || hs.top > TEXT.y1 + 4) out += hs.svg;
     x = cx + half + gap + r() * gap;
   }
@@ -103,7 +103,7 @@ export function emailBannerScene(): string {
   const r = rng(11);
   const far = row(r, H - 44, 46, 66, 4, 3, false, "#0d271a", "#0d271a");
   const near = row(r, H + 2, 62, 90, 8, 3, true, "#0a1a12", "rgba(216,180,106,.22)");
-  // embers, kept out of the crest square, the title block and the lanterns
+  // embers, kept away from the crest, the title and the lanterns
   let embers = "";
   const lanterns = [[150, 40, 1.15], [258, 92, 0.85], [700, 14, 0.8], [858, 22, 0.85], [1118, 96, 1.1]] as const;
   for (let i = 0, tries = 0; i < 40 && tries < 400; tries++) {
@@ -114,7 +114,7 @@ export function emailBannerScene(): string {
     embers += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(rr)}" fill="${r() < 0.5 ? "#ffcf7a" : "#ff8a3c"}" opacity="${f(0.3 + r() * 0.5)}"/>`;
     i++;
   }
-  // astrolabe rings sized to sit just around the crest, not under the title
+  // ring around the crest
   let ticks = "";
   for (let k = 0; k < 72; k++) {
     const a = (k / 72) * Math.PI * 2, r1 = 168, r2 = k % 6 ? 162 : 155;

@@ -1,18 +1,18 @@
 "use client";
 
-// small interactive pieces for the home page: "play" buttons that open a game in the arcade, the About terminal
+// small home page bits: game play buttons, the About terminal, contact tiles and the footer year
 import { useEffect, useRef, useState } from "react";
 import { copyEmail } from "./Chrome";
 import { site } from "../lib/site";
 
-// the current year, so the copyright line never goes stale between deploys
+// current year so the copyright never goes stale
 export function Year() {
   const [y, setY] = useState(2026);
   useEffect(() => setY(new Date().getFullYear()), []);
   return <span suppressHydrationWarning>{y}</span>;
 }
 
-// sections below the fold rise gently into place the first time they scroll into view
+// sections below the fold rise in the first time you scroll to them
 export function Reveal() {
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || typeof IntersectionObserver === "undefined") return;
@@ -26,7 +26,7 @@ export function Reveal() {
         io.unobserve(el);
         el.style.setProperty("--rv-d", `${Math.min(k++, 4) * 90}ms`);
         el.classList.add("in");
-        // once settled, drop the classes: no leftover transform (the arcade's full screen layer needs none above it)
+        // remove the classes after so no transform is left over (the arcade's full screen layer needs that)
         const done = () => { el.classList.remove("rv", "in"); el.style.removeProperty("--rv-d"); };
         el.addEventListener("transitionend", done, { once: true });
         setTimeout(done, 1600);
@@ -38,7 +38,7 @@ export function Reveal() {
   return null;
 }
 
-// back to top: appears once you are well down the page, and glides you home
+// back to top button, shows up once you're far enough down
 export function ToTop() {
   const [show, setShow] = useState(false);
   useEffect(() => {
@@ -71,7 +71,7 @@ export function PlayButton({ id, name }: { id: string; name: string }) {
   );
 }
 
-// ---------- The About terminal ----------
+// about terminal
 type Line = { kind: "in" | "out" | "err"; text: string };
 const COMMANDS: Record<string, string | (() => string)> = {
   help: "whoami · now · stack · games · play <game> · dragons · languages · principles · resume · contact · clear",
@@ -160,7 +160,7 @@ export function Terminal() {
   );
 }
 
-// ---------- Contact channels ----------
+// contact channels
 const Icon = ({ d }: { d: string }) => (
   <svg viewBox="0 0 24 24" aria-hidden="true"><path d={d} /></svg>
 );

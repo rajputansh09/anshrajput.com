@@ -1,4 +1,4 @@
-// brand mark: a horned forest dragon coiled around an engraved brass seal bearing the AR monogram
+// my logo: the dragon crest from lib/dragonMark.ts
 import { dragonMark } from "../lib/dragonMark";
 import "./logo.css";
 

@@ -1,4 +1,4 @@
-/* about photo: round portrait with a forest ring and a soft brass glow */
+/* about photo */
 .photo.portrait {
   position: relative; aspect-ratio: 1; width: 100%; padding: 0; border-radius: 50%; border: 0;
   background: conic-gradient(from 210deg, #6fcf97, #1f6b45, #d8b46a, #1f6b45, #6fcf97);
@@ -10,12 +10,14 @@
   border-radius: 50%; object-fit: cover; border: 4px solid var(--bg); display: block;
 }
 
+/* keep side by side fields lined up when only one of them shows an error */
 .row2 { align-items: start; }
 .field { align-content: start; }
 
-/* the dragon crest as a faint watermark behind the hero: whole */
+/* hero watermark crest, right edge lined up with the content column */
 .hero-crest {
   position: absolute; z-index: 0; pointer-events: none; user-select: none;
+  /* sits between the nav and the status board so it never gets cut off */
   height: min(760px, calc(100% - 305px)); width: auto; max-width: 58vw; aspect-ratio: 1; object-fit: contain; object-position: right center; top: 4px;
   right: max(var(--gutter), calc((100% - var(--wrap)) / 2 + var(--gutter)));
   opacity: 0.15;

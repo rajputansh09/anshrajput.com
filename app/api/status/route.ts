@@ -1,4 +1,4 @@
-// live health check for the client sites shown in the hero
+// pings my client sites for the status board
 export const dynamic = "force-dynamic";
 
 const targets = [
@@ -25,6 +25,7 @@ export async function GET() {
   const results = await Promise.all(targets.map(async (t) => ({ id: t.id, ...(await check(t.url)) })));
   return Response.json(
     { checkedAt: new Date().toISOString(), results },
+    // cache at the edge for 30s so lots of visitors don't mean lots of hits on the client sites
     { headers: { "Cache-Control": "public, max-age=0, s-maxage=30, stale-while-revalidate=30" } },
   );
 }

@@ -1,4 +1,4 @@
-// branded HTML emails for the contact form, in the site's forest-and-brass dragon style
+// HTML emails for the contact form, same forest and brass style as the site
 import { site } from "./site";
 
 const C = {
@@ -17,7 +17,7 @@ const C = {
 };
 const SERIF = "'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif";
 const SANS = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
-// both images are rendered by the site from the same crest artwork as the logo
+// both images are PNGs rendered by the site from the crest
 const BANNER = `${site.url}/brand/email-banner.png`;
 const CREST = `${site.url}/brand/email-crest.png`;
 
@@ -25,7 +25,7 @@ export const esc = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 const para = (s: string) => esc(s).replace(/\n/g, "<br/>");
 
-// hidden line that inboxes show as the preview next to the subject
+// hidden preview text that shows next to the subject in the inbox
 const preheader = (s: string) =>
   `<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;mso-hide:all">${esc(s)}&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;</div>`;
 
@@ -36,18 +36,18 @@ const button = (href: string, label: string, primary = true) =>
       : `background:${C.panel};color:${C.brassHi};border:1px solid ${C.frame}`
   }">${label}</a>`;
 
-// ornamental divider: brass rules either side of a small diamond knot
+// divider: brass lines with a small diamond in the middle
 const ornament = (bg: string) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
   <td style="border-top:1px solid ${C.frame};font-size:0;line-height:0" width="44%">&nbsp;</td>
   <td align="center" style="padding:0 12px;color:${C.brass};font-family:${SERIF};font-size:13px;letter-spacing:7px;white-space:nowrap" bgcolor="${bg}">&#9670;&#10070;&#9670;</td>
   <td style="border-top:1px solid ${C.frame};font-size:0;line-height:0" width="44%">&nbsp;</td>
 </tr></table>`;
 
-// small caps label flanked by diamonds, like an engraved plaque
+// small caps label between two diamonds
 const kicker = (s: string) =>
   `<div style="font-family:${SANS};font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:${C.moss}"><span style="color:${C.brass}">&#9670;</span>&nbsp;&nbsp;${esc(s)}&nbsp;&nbsp;<span style="color:${C.brass}">&#9670;</span></div>`;
 
-// a message shown in a dark panel with a brass rule and a large serif quote mark
+// message box with a brass line and a big quote mark
 const quote = (html: string, rule: string, color: string) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
   <td bgcolor="${C.panel}" style="background:${C.panel};border:1px solid ${C.line};border-left:3px solid ${rule};border-radius:12px;padding:16px 22px 20px">
     <div style="font-family:${SERIF};font-size:44px;line-height:30px;height:26px;color:${C.brass};opacity:.55">&ldquo;</div>
@@ -98,7 +98,7 @@ const when = () =>
     minute: "2-digit",
   });
 
-// the notification Ansh receives
+// email I get
 export function ownerEmail(q: Inquiry) {
   const first = firstName(q.name);
   const reply = `mailto:${encodeURIComponent(q.email)}?subject=${encodeURIComponent(`Re: ${q.reason}`)}`;
@@ -125,7 +125,7 @@ export function ownerEmail(q: Inquiry) {
   });
 }
 
-// the confirmation the visitor receives
+// confirmation the visitor gets
 export function senderEmail(q: Inquiry) {
   const first = firstName(q.name);
   const link = (href: string, label: string) =>

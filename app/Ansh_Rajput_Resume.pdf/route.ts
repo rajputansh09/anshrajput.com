@@ -1,4 +1,4 @@
-// the downloadable resume
+// serves my resume PDF
 import p1 from "../../lib/resumePdf/p1";
 import p2 from "../../lib/resumePdf/p2";
 import p3 from "../../lib/resumePdf/p3";

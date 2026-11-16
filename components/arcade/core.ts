@@ -1,4 +1,4 @@
-// shared pieces for the browser remakes of Ansh's Unreal Engine games: the input every game reads
+// shared stuff for the browser versions of my Unreal games: the input every game reads
 
 export const W = 960;
 export const H = 540;
@@ -47,7 +47,7 @@ export const wrap = (a: number) => Math.atan2(Math.sin(a), Math.cos(a));
 export const dist = (a: V, b: V) => Math.hypot(a.x - b.x, a.y - b.y);
 export const rnd = (a: number, b: number) => a + Math.random() * (b - a);
 
-// turn `from` toward `to` by at most `rate` radians
+// turn from toward to by at most rate radians
 export const turnTo = (from: number, to: number, rate: number) => {
   const d = wrap(to - from);
   return Math.abs(d) <= rate ? to : from + Math.sign(d) * rate;
@@ -56,7 +56,7 @@ export const turnTo = (from: number, to: number, rate: number) => {
 export const inRect = (x: number, y: number, r: Rect, m = 0) => x > r.x - m && x < r.x + r.w + m && y > r.y - m && y < r.y + r.h + m;
 export const overlap = (a: Rect, b: Rect) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 
-// where a segment first enters a rectangle (0..1 along the segment), or -1
+// where a segment first enters a rectangle (0..1 along it), or -1
 export const segRect = (x0: number, y0: number, x1: number, y1: number, r: Rect) => {
   let t0 = 0, t1 = 1;
   const dx = x1 - x0, dy = y1 - y0;
@@ -69,13 +69,13 @@ export const segRect = (x0: number, y0: number, x1: number, y1: number, r: Rect)
   }
   return t0;
 };
-// nearest hit along a segment against a set of rectangles (a line trace)
+// closest hit along a segment against a list of rectangles
 export const trace = (x0: number, y0: number, x1: number, y1: number, rs: Rect[]) => {
   let best = 1;
   for (const r of rs) { const t = segRect(x0, y0, x1, y1, r); if (t >= 0 && t < best) best = t; }
   return best;
 };
-// where a ray from (x0, y0) toward (x1, y1) first touches a circle (0..1), or -1
+// where a ray from (x0, y0) to (x1, y1) first hits a circle (0..1), or -1
 export const segCircle = (x0: number, y0: number, x1: number, y1: number, cx: number, cy: number, r: number) => {
   const dx = x1 - x0, dy = y1 - y0, fx = x0 - cx, fy = y0 - cy;
   const a = dx * dx + dy * dy, b = 2 * (fx * dx + fy * dy), c = fx * fx + fy * fy - r * r;
@@ -92,7 +92,7 @@ export const circleOut = (p: V, r: number, b: Rect): V | null => {
   const d2 = dx * dx + dy * dy;
   if (d2 >= r * r) return null;
   if (d2 === 0) {
-    // centre inside: leave by the nearest side
+    // centre is inside, push out the nearest side
     const l = p.x - b.x, rr = b.x + b.w - p.x, t = p.y - b.y, bb = b.y + b.h - p.y, m = Math.min(l, rr, t, bb);
     if (m === l) { p.x = b.x - r; return { x: -1, y: 0 }; }
     if (m === rr) { p.x = b.x + b.w + r; return { x: 1, y: 0 }; }
@@ -105,7 +105,7 @@ export const circleOut = (p: V, r: number, b: Rect): V | null => {
   return { x: dx, y: dy };
 };
 
-// ---------- Particles ---------- Sparks add light (drawn with "lighter"); chunks are solid debris that tumble
+// particles sparks are additive, chunks are debris that tumble, rings are shockwaves, texts float up, decals
 export type Part = { x: number; y: number; vx: number; vy: number; life: number; max: number; r: number; col: string; g: number; kind: "spark" | "chunk" | "smoke"; rot: number; vr: number };
 type Ring = { x: number; y: number; r: number; max: number; life: number; dur: number; col: string; w: number };
 type Txt = { x: number; y: number; s: string; col: string; life: number; size: number };
@@ -123,7 +123,7 @@ export class Fx {
       this.parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life, max: life, r: r * (0.6 + Math.random() * 0.8), col, g, kind: "spark", rot: 0, vr: 0 });
     }
   }
-  // directional spray, e.g
+  // spray in one direction, like sparks off a wall
   spray(x: number, y: number, ang: number, spread: number, col: string, n = 8, speed = 260, r = 2) {
     for (let k = 0; k < n; k++) {
       const a = ang + (Math.random() - 0.5) * spread, v = speed * (0.4 + Math.random() * 0.6), life = 0.18 + Math.random() * 0.25;
@@ -168,7 +168,7 @@ export class Fx {
     for (let k = this.texts.length - 1; k >= 0; k--) { const t = this.texts[k]; t.life -= dt; t.y -= 38 * dt; if (t.life <= 0) this.texts.splice(k, 1); }
     for (let k = this.decals.length - 1; k >= 0; k--) { const d = this.decals[k]; d.life -= dt; if (d.life <= 0) this.decals.splice(k, 1); }
   }
-  // floor marks: draw before the things standing on the floor
+  // floor marks, drawn before anything standing on the floor
   drawUnder(c: CanvasRenderingContext2D) {
     c.save();
     for (const d of this.decals) {
@@ -215,7 +215,7 @@ export class Fx {
     }
     c.globalAlpha = 1;
   }
-  // drawn last, over everything: the white flash of a big explosion
+  // drawn last: the white flash from a big explosion
   drawFlash(c: CanvasRenderingContext2D) {
     if (this.flash <= 0) return;
     c.fillStyle = `rgba(255,236,200,${this.flash * 0.35})`;
@@ -227,7 +227,7 @@ export class Fx {
   }
 }
 
-// ---------- Navigation ---------- A grid stand-in for Unreal's nav mesh: cells a pawn of radius r can stand in
+// navigation Grid version of Unreal's nav mesh: cells a pawn of radius r fits in, plus a BFS from the goal
 export class Nav {
   cols: number; rows: number; open: Uint8Array;
   constructor(public walls: Rect[], public r: number, public cell = 20) {
@@ -239,7 +239,7 @@ export class Nav {
     }
   }
   idx(x: number, y: number) { return clamp(Math.floor(y / this.cell), 0, this.rows - 1) * this.cols + clamp(Math.floor(x / this.cell), 0, this.cols - 1); }
-  // nearest open cell to a point (a goal inside a wall's margin still gets a path)
+  // closest open cell to a point, so a goal right next to a wall still gets a path
   near(x: number, y: number) {
     const s = this.idx(x, y);
     if (this.open[s]) return s;
@@ -269,7 +269,7 @@ export class Nav {
     out.push(to);
     return out;
   }
-  // the farthest waypoint reachable in a straight line (a swept circle) from p
+  // farthest waypoint you can reach in a straight line from p
   steer(p: V, path: V[], solids: Rect[]): V {
     let pick = path[0];
     for (let k = 0; k < Math.min(path.length, 12); k++) {
@@ -279,13 +279,13 @@ export class Nav {
     return pick;
   }
 }
-// true when a circle of radius r can slide from a to b without touching a wall
+// true if a circle of radius r can slide from a to b without hitting a wall
 export const clearLine = (a: V, b: V, solids: Rect[], r: number) => {
   for (const w of solids) if (segRect(a.x, a.y, b.x, b.y, { x: w.x - r, y: w.y - r, w: w.w + r * 2, h: w.h + r * 2 }) >= 0) return false;
   return true;
 };
 
-// ---------- Palette and drawing ----------
+// colours and drawing
 export const C = {
   bg: "#07110c", bg2: "#0b1912", floor: "#0e2017", line: "#1e3b2c", wall: "#22392d", wallTop: "#2f4d3d",
   text: "#e6efe8", muted: "#8da597", moss: "#6fcf97", brass: "#d8b46a", danger: "#f08c7a", fire: "#ffb04a", ice: "#9fd9f2",
@@ -304,7 +304,7 @@ export const label = (c: CanvasRenderingContext2D, text: string, x: number, y: n
   c.fillText(text, x, y);
 };
 
-// a health bar over something
+// health bar above something
 export const bar = (c: CanvasRenderingContext2D, x: number, y: number, w: number, frac: number, col: string) => {
   c.fillStyle = "rgba(0,0,0,0.55)";
   box(c, x - w / 2, y, w, 5, 3); c.fill();
@@ -314,14 +314,14 @@ export const bar = (c: CanvasRenderingContext2D, x: number, y: number, w: number
 
 export const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}.${Math.floor((s % 1) * 10)}`;
 
-// a soft dark edge around the screen, like a lens, so the eye stays in the middle
+// dark vignette around the edges
 export const vignette = (c: CanvasRenderingContext2D, strength = 0.55) => {
   const g = c.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, H * 0.95);
   g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, `rgba(0,0,0,${strength})`);
   c.fillStyle = g; c.fillRect(0, 0, W, H);
 };
 
-// a static backdrop painted once into its own canvas, then copied each frame (floors, textures, grass)
+// static background painted once into its own canvas and copied every frame
 export const painted = (paint: (c: CanvasRenderingContext2D) => void): HTMLCanvasElement | null => {
   if (typeof document === "undefined") return null;
   const cv = document.createElement("canvas");
@@ -330,13 +330,13 @@ export const painted = (paint: (c: CanvasRenderingContext2D) => void): HTMLCanva
   return cv;
 };
 
-// a deterministic random number generator, so textures look the same on every visit
+// seeded random so textures look the same every visit
 export const seeded = (seed: number) => () => {
   seed = (seed * 1664525 + 1013904223) >>> 0;
   return seed / 4294967296;
 };
 
-// the big centred banner used for countdowns and level names
+// big centred banner for countdowns and level names
 export const banner = (c: CanvasRenderingContext2D, title: string, sub: string, life: number, col = C.brass) => {
   if (life <= 0) return;
   const a = Math.min(1, life * 2.5);
@@ -349,7 +349,7 @@ export const banner = (c: CanvasRenderingContext2D, title: string, sub: string, 
   c.restore();
 };
 
-// lock-on marker for touch play: four brass corners closing in on the target the game is aiming at for you
+// lock on marker for touch: four brass corners closing in on the target
 export function lockOn(c: CanvasRenderingContext2D, x: number, y: number, r: number, t: number) {
   const k = r + 6 + Math.sin(t * 6) * 2.5, L = 9;
   c.save();

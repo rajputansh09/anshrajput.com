@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-// lets phones and Chrome show the crest when the site is saved to a home screen
+// Web app manifest so the crest shows up when someone adds the site to their home screen
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Ansh Rajput",

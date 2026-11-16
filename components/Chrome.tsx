@@ -5,7 +5,7 @@ import { sections, site } from "../lib/site";
 import Logo from "./Logo";
 import { checkIn, savedKey } from "./whereabouts";
 
-// small helpers shared by the page: toast, copy email, header with scroll progress, command palette
+// shared page bits: toast, copy email, header progress bar, command palette
 
 export function toast(message: string) {
   window.dispatchEvent(new CustomEvent("toast", { detail: message }));
@@ -130,7 +130,7 @@ export function CommandPalette() {
     ],
     [],
   );
-  // word-start matches rank first ("res" finds "resume" before "address")
+  // matches at the start of a word rank first, so "res" finds resume before address
   const term = q.toLowerCase().trim();
   const score = (label: string) => {
     const l = label.toLowerCase();
@@ -237,7 +237,7 @@ export function KeyHint() {
 }
 
 export function LocalTime() {
-  // starts on the home base, then switches to wherever Ansh's laptop last checked in (see app/api/whereabouts)
+  // shows Edmonton until my laptop has checked in (see app/api/whereabouts)
   const [place, setPlace] = useState({ city: site.location.split(",")[0], timeZone: site.timeZone });
   const [now, setNow] = useState<string>("");
   useEffect(() => {
@@ -248,7 +248,7 @@ export function LocalTime() {
         if (alive && p?.city && p?.timeZone) setPlace({ city: p.city, timeZone: p.timeZone });
       })
       .catch(() => {});
-    // on Ansh's own browser (key saved at /checkin), quietly report where he is, at most every 30 minutes
+    // on my own browser (key saved at /checkin) send my location, at most every 30 min
     const key = savedKey();
     if (key) {
       checkIn(key).then((r) => {

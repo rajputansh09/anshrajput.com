@@ -1,4 +1,4 @@
-// the detailed dragon crest as a PNG for emails (email apps cannot show SVG)
+// crest as a PNG for emails
 import { ImageResponse } from "next/og";
 import { dragonMark } from "../../../lib/dragonMark";
 

@@ -1,5 +1,4 @@
-/* skill astrolabe */
-/* the turning layers' corners swing outside the disc */
+/* skills astrolabe, loaded by Astrolabe.tsx */
 #skills { overflow-x: hidden; overflow-x: clip; }
 .astro {
   display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(290px, 0.7fr); gap: 44px; align-items: center;
@@ -10,14 +9,14 @@
 .astro.view-scroll .astro-legend { grid-template-columns: 1fr 1fr; }
 .astro-inspect[hidden] { display: none; }
 
-/* the disc is pinned to the top of its row */
+/* stage: disc, instrument, fire canvas */
+/* pin the disc to the top */
 .astro-stage { position: relative; max-width: 720px; width: 100%; margin: 0 auto; aspect-ratio: 1; align-self: start; }
-/* a long press on iPhone would otherwise start text selection */
 .astro-stage, .astro-strip, .astro-stage *, .astro-strip * {
   -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent;
 }
 .astro-stage::before {
-  /* cast shadow and a faint green glow under the instrument */
+  /* shadow and a faint green glow under the instrument */
   content: ""; position: absolute; inset: 3% 1% -2% 3%; border-radius: 50%; pointer-events: none;
   background: radial-gradient(closest-side, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.35) 70%, transparent);
   filter: blur(18px); transform: translate(2%, 3%);
@@ -53,7 +52,7 @@
 .rim-ticks { fill: none; stroke: #2a1a08; stroke-width: 1.4; stroke-opacity: 0.7; }
 .rim-text { fill: #2b1a07; fill-opacity: 0.75; font-size: 17px; letter-spacing: 9px; dominant-baseline: central; }
 
-/* bands: fixed bronze with grooves; the engravings on them turn */
+/* bands stay still, the engravings on them rotate */
 .band { transition: opacity 0.4s; }
 .band.gone { opacity: 0.18; }
 .band-metal { fill: none; stroke: url(#astro-bronze); stroke-width: 30; }
@@ -69,7 +68,7 @@
 }
 .astro-light { pointer-events: none; }
 
-/* rune gems in bronze bezels */
+/* rune gems */
 .rune { cursor: pointer; transform: scale(var(--k)); transition: opacity 0.3s; outline: none; }
 .rune-hit { fill: transparent; }
 .rune-halo { opacity: 0; transition: opacity 0.6s; pointer-events: none; }
@@ -77,7 +76,7 @@
 .rune-glyph {
   fill: #8a8366; font-size: 15px; text-anchor: middle; pointer-events: none; transition: fill 0.4s;
 }
-/* sleeping runes smoulder, inviting a touch */
+/* sleeping runes smoulder a bit so people want to touch them */
 .seen .rune:not(.awake) .rune-glyph { animation: ember 3.2s ease-in-out infinite; }
 @keyframes ember { 50% { fill: #f0b45a; } }
 .rune-hint {
@@ -139,10 +138,10 @@
 .seal.dim { opacity: 0.35; }
 @keyframes flicker { to { opacity: 0.8; } }
 
-/* fire channel: revealed by the flame front, then smoulders */
+/* fire channel, revealed by the flame then smoulders */
 .thread { fill: none; stroke: #ffc066; stroke-width: 3.2; stroke-linecap: round; stroke-opacity: 0.9; }
 
-/* the dragon's eye */
+/* dragon eye */
 .eye-halo { opacity: 0.55; transform-box: fill-box; transform-origin: center; animation: eye-breathe 4s ease-in-out infinite; pointer-events: none; }
 .eye-bezel { stroke: #1a1006; stroke-width: 1.5; }
 .eye-rim { fill: #0a1610; stroke: #1a1006; stroke-width: 2; }
@@ -158,13 +157,15 @@
 @keyframes eye-blink { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.06); } }
 @keyframes eye-breathe { 50% { transform: scale(1.12); opacity: 0.35; } }
 
+/* all runes awake: big flash, then a warm glow */
 .complete .eye-halo { opacity: 0.85; }
 .complete .band-shine { stroke: #ffd48a; stroke-opacity: 0.6; }
 .blaze .band-metal, .blaze .rim-band { animation: blaze 1.2s ease-in-out 3; }
 .blaze .eye-halo { animation: eye-breathe 0.6s ease-in-out infinite; opacity: 1; }
 @keyframes blaze { 50% { stroke: #ffcf7a; } }
 
-/* ---------- Side panel ---------- */
+/* side panel */
+/* card sits above the roaming dragon so the dragon never covers it */
 .astro-panel { display: grid; gap: 16px; align-content: center; position: relative; z-index: 31; }
 .astro-inspect {
   min-height: 236px; padding: 24px; border-radius: var(--r);
@@ -274,15 +275,15 @@
   .eye-lid { transform: none; }
 }
 
-/* ---------- Interactive extras ---------- */
-/* torchlight: a warm glint follows the cursor across the metal */
+/* extras */
+/* warm glint that follows the cursor over the metal */
 .astro-torch {
   position: absolute; inset: 0.7%; border-radius: 50%; pointer-events: none; opacity: 0; transition: opacity 0.4s;
   background: radial-gradient(circle at var(--tx, 50%) var(--ty, 50%), rgba(255, 226, 160, 0.16), rgba(255, 200, 120, 0.05) 14%, transparent 30%);
 }
 .astro-stage.torch .astro-torch { opacity: 1; }
 
-/* runes swell under the cursor */
+/* runes grow under the cursor */
 .rune-bezel, .rune-gem { transform-box: fill-box; transform-origin: center; transition: transform 0.2s, opacity 0.6s; }
 .rune:hover .rune-bezel, .rune:hover .rune-gem, .rune:focus-visible .rune-bezel, .rune:focus-visible .rune-gem { transform: scale(1.18); }
 
@@ -303,7 +304,7 @@
 }
 @keyframes toast-in { 0% { opacity: 0; transform: translate(-50%, -8px); } 12%, 82% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; } }
 
-/* find a skill */
+/* skill search */
 .astro-find { position: relative; display: flex; align-items: center; gap: 10px; padding: 0 14px; border-radius: 14px; border: 1px solid rgba(216, 180, 106, 0.4); background: rgba(10, 24, 17, 0.85); }
 .astro-find:focus-within { border-color: var(--brass); box-shadow: 0 0 0 3px rgba(216, 180, 106, 0.15); }
 .astro-find > svg { width: 18px; height: 18px; flex: none; fill: none; stroke: var(--brass); stroke-width: 2; stroke-linecap: round; }

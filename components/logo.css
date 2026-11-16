@@ -1,4 +1,4 @@
-/* brand mark */
+/* logo */
 .logo { display: block; overflow: visible; flex: none; filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.45)); }
 .logo .logo-flame { opacity: 0; transform-box: fill-box; transform-origin: left center; transform: scaleX(0.2); transition: opacity 0.15s, transform 0.2s; }
 .logo .logo-eye { animation: logo-eye 3.2s ease-in-out infinite; }

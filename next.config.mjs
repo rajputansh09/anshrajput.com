@@ -1,6 +1,6 @@
 /** @type {import("next").NextConfig} */
 
-// security headers for every page and API route
+// security headers on every route
 const isDev = process.env.NODE_ENV === "development";
 const csp = [
   "default-src 'self'",

@@ -32,7 +32,7 @@ export default function BingToggle() {
   const chartRef = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
 
-  // animate the indexed-pages chart the first time it scrolls into view
+  // animate the chart the first time it scrolls into view
   useEffect(() => {
     const el = chartRef.current;
     if (!el) return;

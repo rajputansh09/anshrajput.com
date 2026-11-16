@@ -1,4 +1,4 @@
-// single source of truth for contact details and links
+// contact details and links, all in one place
 export const site = {
   name: "Ansh Rajput",
   url: "https://anshrajput.com",

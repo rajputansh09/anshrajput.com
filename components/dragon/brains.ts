@@ -1,11 +1,11 @@
 "use client";
-// how the two dragons share the page: wandering, keeping clear of each other
+// how the two dragons share the page: wandering, staying out of each other's way
 import type { P, Spark, Wall } from "./types";
 import { Creature, inRect, wrap, type Box } from "./creature";
 import type { Sky } from "./world";
 
 export const DUEL_LEN = 15;
-// a random point in box that is clear of walls and anything else `bad` rejects
+// random point in box that isn't in a wall and passes bad
 export function freePoint(box: Box, walls: Wall[], s: number, bad: (p: P) => boolean, tries = 24): P {
   let p = { x: (box.x0 + box.x1) / 2, y: (box.y0 + box.y1) / 2 };
   for (let k = 0; k < tries; k++) {
@@ -22,18 +22,18 @@ const clampTo = (p: P, box: Box, m: number): P => ({
   y: Math.max(box.y0 + m, Math.min(box.y1 - m, p.y)),
 });
 
-// steering clear of the other dragon
+// avoiding the other dragon
 export class Avoid {
   side = 0;
   until = 0;
   threat = 0;
   close = 0;
   lock = 0;
-  // room: how wide a berth to give (more when both share the screen
+  // room: how much space to leave
   steer(me: Creature, other: Creature, s: number, t: number, room = 1): { bias: number; slow: number } {
     if (other.alpha < 0.5) { this.threat = 0; return { bias: 0, slow: 1 }; }
     const hd = me.seg[0], c = me.course, oh = other.seg[0];
-    // far apart: nothing to do (cheap early out)
+    // far apart, nothing to do
     if (Math.hypot(oh.x - hd.x, oh.y - hd.y) > 900 * s && other.bodyGap(hd).gap > 420 * s) { this.threat = 0; return { bias: 0, slow: 1 }; }
     let threat = 0, qx = 0, qy = 0;
     for (const L of [35, 85, 145, 215, 295, 380]) {
@@ -50,17 +50,17 @@ export class Avoid {
         qx = q.x; qy = q.y;
       }
     }
-    // ease the threat in and out, so the swerve itself is a smooth curve
+    // ease the threat in and out so the swerve is smooth
     this.threat += (threat - this.threat) * 0.2;
     if (this.threat < 0.02 && this.lock < 0.02 && other.bodyGap(hd).gap > 200 * room * s) { this.lock = 0; return { bias: 0, slow: 1 }; }
     if (threat > 0.02) {
       const dx = qx - hd.x, dy = qy - hd.y, cr = Math.cos(c) * dy - Math.sin(c) * dx, L = Math.hypot(dx, dy) || 1;
-      // dead ahead: keep to the same hand as the other does (both turn clockwise), so they pass instead of mirroring
+      // dead ahead: both turn the same way so they pass instead of mirroring each other
       const want = Math.abs(cr) < 0.18 * L ? 1 : cr > 0 ? -1 : 1;
       if (t > this.until || (want !== this.side && Math.abs(cr) > 0.4 * L)) this.side = want;
       this.until = t + 0.9;
     }
-    // flying side by side, close: they would stay locked together (each one's way on lies across the other
+    // side by side and close: they'd get stuck together and drift off screen as a pair
     let lock = 0, slow = 1;
     {
       const g = other.bodyGap(hd, 0, true).gap, par = Math.abs(Math.atan2(Math.sin(other.course - c), Math.cos(other.course - c))) < 0.9;
@@ -73,14 +73,14 @@ export class Avoid {
       }
     }
     this.lock += (lock - this.lock) * 0.1;
-    // pressed close for over a second: the brain should pick somewhere else to go
+    // pressed close for over a second, so pick somewhere else to go
     this.close = this.threat > 0.45 || this.lock > 0.4 ? this.close + 1 / 60 : 0;
-    // it keeps its pace (slowing down beside the other looked like sniffing it); only the course bends
+    // keep the speed (slowing down next to the other looked like it was sniffing it), only bend the course
     return { bias: this.side * Math.max(this.threat, this.lock) * 1.35, slow: Math.min(1 - 0.08 * this.threat, 1 - (1 - slow) * Math.min(1, this.lock * 1.5)) };
   }
 }
 
-// a dragon outside its box (scrolled out of its area, or flying in from off-screen) heads straight back in
+// a dragon outside its area (scrolled away or flying in from off screen) heads straight back
 export function homeward(me: Creature, box: Box, s: number, slack = 0, walls: Wall[] = []): P | null {
   const hd = me.seg[0];
   if (me.stuck > 0) return null;
@@ -92,7 +92,7 @@ export function homeward(me: Creature, box: Box, s: number, slack = 0, walls: Wa
     let hit = false;
     for (let u = 0.15; u <= 1 && !hit; u += 0.17) hit = inRect(hd.x + (p.x - hd.x) * u, hd.y + (p.y - hd.y) * u, wl, 55 * s);
     if (!hit) continue;
-    // round the wall on the side nearer to where it is
+    // go around the wall on the closer side
     const cy = wl.y + wl.h / 2, cx = wl.x + wl.w / 2;
     if (wl.w >= wl.h) p.y = hd.y < cy ? Math.min(p.y, wl.y - 150 * s) : Math.max(p.y, wl.y + wl.h + 150 * s);
     else p.x = hd.x < cx ? Math.min(p.x, wl.x - 150 * s) : Math.max(p.x, wl.x + wl.w + 150 * s);
@@ -103,12 +103,12 @@ export function homeward(me: Creature, box: Box, s: number, slack = 0, walls: Wa
 
 const off = (me: Creature, p: P) => Math.abs(Math.atan2(Math.sin(Math.atan2(p.y - me.seg[0].y, p.x - me.seg[0].x) - me.course), Math.cos(Math.atan2(p.y - me.seg[0].y, p.x - me.seg[0].x) - me.course)));
 
-// a dragon's own wander
+// wandering
 export class Wander {
   at: P = { x: 0, y: 0 };
   until = 0;
   huntAt = 0;
-  // from: somewhere to drift away from (the other dragon, after a close pass or a duel)
+  // from: somewhere to move away from (the other dragon after a close pass or a duel), further spots score higher
   partFrom: (() => P) | null = null;
   partUntil = 0;
   part(from: () => P, t: number, secs: number) { this.partFrom = from; this.partUntil = t + secs; }
@@ -139,12 +139,12 @@ export class Wander {
     this.at = p;
     this.until = t + hold;
   }
-  // reached, overdue, or too tight to reach without circling (close by and well off to one side, or behind it)
+  // reached it, took too long, or it's too tight to reach without circling: pick a new target
   due(t: number, me: Creature, s: number) {
     const hd = me.seg[0], d = Math.hypot(this.at.x - hd.x, this.at.y - hd.y), o = off(me, this.at);
     return t > this.until || d < 90 * s || (d < 220 * s && o > 1.2) || (d < 420 * s && o > 2.3);
   }
-  // breathe at a rising lantern ahead, unless the other dragon has it in its sights or is clearly nearer to it
+  // breathe at a lantern ahead, unless the other dragon is already going for it or is clearly closer
   hunt(t: number, me: Creature, sky: Sky[], s: number, rival?: Creature, area?: Box) {
     if (t < this.huntAt || me.fireAt || me.breath > 0) return;
     this.huntAt = t + 0.45;
@@ -152,7 +152,7 @@ export class Wander {
     let best: Sky | null = null, bs = Infinity;
     for (const o of sky) {
       if (o.a < 0.6 || (rv && rv.prey === o)) continue;
-      // only lanterns well inside its area (not ones still rising from below the edge of the screen)
+      // only lanterns well inside the area, not ones still coming up from below
       if (area && (o.x < area.x0 + 60 * s || o.x > area.x1 - 60 * s || o.y < area.y0 + 60 * s || o.y > area.y1 - 90 * s)) continue;
       const d = Math.hypot(o.x - hd.x, o.y - hd.y), ang = off(me, o);
       if (d > 420 * s || d < 110 * s || ang > 1.0) continue;
@@ -167,7 +167,7 @@ export class Wander {
   }
 }
 
-// the duel, choreographed so it always reads as a real fight
+// the duel is scripted so it always looks like a real fight
 const bump = (x: number, up: number, len: number) => x <= 0 || x >= len ? 0 : x < up ? Math.sin((x / up) * Math.PI / 2) : 0.5 + 0.5 * Math.cos(((x - up) / (len - up)) * Math.PI);
 export type DuelFx = { clash: (p: P) => void; knock: (p: P) => void; snort: (c: Creature) => void };
 const STANCE = 180;
@@ -223,7 +223,7 @@ export class Duel {
     this.hitIdx = [];
     this.wlog = [[], []];
     this.attacker = Math.random() < 0.5 ? 0 : 1;
-    // split along the longer side of the screen, between the two bodies (not just the heads
+    // split along the longer side of the screen between the two bodies (not just the heads
     this.axis = box.x1 - box.x0 >= box.y1 - box.y0 ? "x" : "y";
     const a = this.axis, lo = a === "x" ? box.x0 : box.y0, hi = a === "x" ? box.x1 : box.y1;
     const cen = (c: Creature) => { let m = 0; for (let i = 0; i < c.seg.length; i += 2) m += c.seg[i][a] * (i < 24 ? 2 : 1); return m / (c.seg.length / 2 + 12); };
@@ -243,24 +243,24 @@ export class Duel {
       const sp = Math.max(2 * s, d[k].speed);
       this.wv[k] = { x: Math.cos(d[k].course) * sp, y: Math.sin(d[k].course) * sp };
     }
-    // both arrive at about the same moment: the one with further to go flies a little faster
+    // the one with further to go flies a bit faster so they arrive together
     const T = Math.max(this.way[0]!.total, this.way[1]!.total) / (5.5 * s);
     for (const w of this.way) if (w) w.v = Math.max(2.4 * s, Math.min(6.5 * s, w.total / Math.max(1, T)));
   }
   ghost: [Wall, Wall] = [{ x: 0, y: 0, w: 0, h: 0, seed: 0, ghost: true }, { x: 0, y: 0, w: 0, h: 0, seed: 0, ghost: true }];
 
-  // line coordinates for dragon k: u is the distance from the line into its own half, v runs along the line
+  // line coordinates for dragon k: u is distance from the line into its half, v runs along the line
   private u(k: number, p: P) { return (p[this.axis] - this.mid) * this.sign[k]; }
   private v(p: P) { return this.axis === "x" ? p.y : p.x; }
   private xy(k: number, u: number, v: number): P { return this.axis === "x" ? { x: this.mid + this.sign[k] * u, y: v } : { x: v, y: this.mid + this.sign[k] * u }; }
   private latUnit(): P { return this.axis === "x" ? { x: 0, y: 1 } : { x: 1, y: 0 }; }
-  // how deep dragon k's half is, from the line to the edge of the arena
+  // how deep dragon k's half is, from the line to the edge
   private depth(k: number) {
     const b = this.box, sg = this.sign[k];
     return this.axis === "x" ? (sg < 0 ? this.mid - b.x0 : b.x1 - this.mid) : sg < 0 ? this.mid - b.y0 : b.y1 - this.mid;
   }
 
-  // taking position: a smooth curve from where the dragon is (leaving along its heading) back into its own half
+  // getting into position: a smooth curve back into its own half, then a straight run in to its mark
   private plan(k: number, me: Creature, s: number): Way {
     const p0 = { x: me.seg[0].x, y: me.seg[0].y }, dl = this.lineDir(k), away = dl + Math.PI;
     const M = this.xy(k, STANCE * s, this.vB);
@@ -269,7 +269,7 @@ export class Duel {
     const b = this.box, m = 50 * s;
     const keep = (p: P) => {
       const q = { x: Math.max(b.x0 + m, Math.min(b.x1 - m, p.x)), y: Math.max(b.y0 + m, Math.min(b.y1 - m, p.y)) };
-      // never across the line
+      // never cross the line
       if (this.u(k, q) < 70 * s) { const v = this.v(q); return this.xy(k, 70 * s, v); }
       return q;
     };
@@ -288,7 +288,7 @@ export class Duel {
       });
     }
     for (let i = 1; i <= 12; i++) add({ x: S.x + (M.x - S.x) * (i / 12), y: S.y + (M.y - S.y) * (i / 12) });
-    // the route actually flown: a virtual head follows that curve with a dragon's turning circle
+    // the actual route: a virtual head follows that curve with the dragon's turning limit
     const ref = pts.slice(), st = 4 * s, look = 55 * s;
     for (const rate of [0.05, 0.075, 0.11, 0.16]) {
       const fp: P[] = [{ ...p0 }], fl: number[] = [0];
@@ -316,19 +316,19 @@ export class Duel {
   }
 
   elapsed(t: number) { return t - this.t0; }
-  // seconds left, for the countdown
+  // seconds left for the countdown
   left(t: number) {
     const el = t - this.t0;
     if (this.clashed) return Math.max(0, Math.ceil(this.clashAt + EXIT - el));
     return Math.max(1, Math.ceil((this.ready ? this.ready + S2 + 0.8 + EXIT : 15) - el));
   }
   done(t: number) { const el = t - this.t0; return el > 26 || (this.clashed && el - this.clashAt >= EXIT); }
-  // (Test hook) each head in line coordinates: [u0, v0, u1, v1], v measured from the middle lane
+  // test hook: each head in line coordinates [u0, v0, u1, v1], v from the middle lane
   uv(d: [Creature, Creature]) { return [this.u(0, d[0].seg[0]), this.v(d[0].seg[0]) - this.vB, this.u(1, d[1].seg[0]), this.v(d[1].seg[0]) - this.vB, this.lane[0], this.lane[1]]; }
-  // (Test hook) which act is under way
+  // test hook: which part of the duel is running
   round(t: number) { const r = t - this.t0 - this.ready; return !this.ready ? -1 : r < G1 ? 0 : r < 7 ? 1 : r < G2 ? 2 : 3; }
 
-  // (Kept for the walls list: the duel's line, which the choreography never crosses anyway.)
+  // for the walls list: the duel line (the choreography never crosses it anyway)
   wallsFor(k: 0 | 1, me: Creature) {
     const v = me.seg[0][this.axis] - this.mid;
     return v * this.sign[k] > 0 ? [this.ghost[k]] : [];
@@ -338,10 +338,10 @@ export class Duel {
     const b = this.box;
     return this.axis === "x" ? (p.y - b.y0 - 80) / Math.max(1, b.y1 - b.y0 - 160) : (p.x - b.x0 - 70) / Math.max(1, b.x1 - b.x0 - 140);
   }
-  // the way toward the line from dragon k's side
+  // direction toward the line from dragon k's side
   private lineDir(k: number) { return this.axis === "x" ? (this.sign[k] < 0 ? 0 : Math.PI) : this.sign[k] < 0 ? Math.PI / 2 : -Math.PI / 2; }
 
-  // the part of the rival's neck and chest nearest this dragon's snout: where its fire is aimed
+  // closest part of the rival's neck and chest to this dragon's snout, where the fire aims
   static bodyAim(me: Creature, other: Creature): P {
     const sn = me.headPt(58, 0);
     let best = Infinity, at = other.seg[8];
@@ -363,13 +363,13 @@ export class Duel {
     me.breatheAt(aimer(), t, 1.2, aimer);
   }
 
-  // hold or ease toward (gu, gv) in line coordinates: toward the line by flying the head straight in
+  // move toward (gu, gv) in line coordinates: toward the line by flying the head straight in
   private hold(k: number, me: Creature, gu: number, gv: number, su: number, sv: number, s: number) {
     const hd = me.seg[0], u = this.u(k, hd), v = this.v(hd), dl = this.lineDir(k), lat = this.latUnit();
     const fwd = { x: Math.cos(dl), y: Math.sin(dl) };
-    // the head leans the way it is swaying, a little
+    // head leans a little into the sway
     const lean = (f: number, l: number) => Math.atan2(fwd.y * Math.max(f, 4 * s) + lat.y * l * 0.6, fwd.x * Math.max(f, 4 * s) + lat.x * l * 0.6);
-    // its motion along and across the line speeds up and slows down gradually
+    // speed along and across the line changes gradually (it eases to a stop before pulling back)
     const brake = (want: number, cur: number, acc: number) => { const stop = Math.sqrt(2 * acc * Math.abs(want)) * Math.sign(want); const tgt = Math.abs(stop) < Math.abs(want) ? stop : want; return cur + Math.max(-acc, Math.min(acc, tgt - cur)); };
     const V = this.vel[k];
     V.u = brake(Math.max(-su, Math.min(su, gu - u)), V.u, 0.32 * s);
@@ -383,12 +383,12 @@ export class Duel {
     }
     if (du > 0.05) me.retreat(du, dl);
     const h2 = me.seg[0], v2 = this.v(h2), dv = V.v;
-    // sideways: the neck bends (a step of the head alone would be undone by the next rearing back)
+    // sideways: bend the neck (moving just the head would get undone by the next rear back)
     if (Math.abs(dv) > 0.05) me.sway(lat.x * dv, lat.y * dv, 230 * s);
     else if (du <= 0.05) me.track(h2.x, h2.y, dl);
   }
 
-  // where a strike lands: between the striker's jaw and the nearest part of the other
+  // where a strike lands: between the striker's jaw and the closest part of the other
   hitIdx: number[] = [];
   private contact(me: Creature, other: Creature): P {
     const j = me.headPt(46, 0), { i } = other.bodyGap(j), q = other.seg[Math.max(0, i)];
@@ -403,10 +403,9 @@ export class Duel {
     this.lunge[k] = { vx: Math.cos(dl) * 2 * s, vy: Math.sin(dl) * 2 * s, sp: 2 * s, passed: false, t0: el, final };
   }
 
-  // a strike: it shoots down its lane past the other's head, then curves into its neck
+  // strike: shoot down the lane past the other's head, then curve into its neck
   private stepLunge(k: 0 | 1, d: [Creature, Creature], el: number, s: number, fx: DuelFx) {
     const me = d[k], other = d[1 - k], L = this.lunge[k]!, hd = me.seg[0];
-    // fast down the lane; in the last moment before contact it eases a little
     const near = L.passed ? me.faceGap(hd.x, hd.y, me.dirAt(0), [other]) : Infinity;
     L.sp = near < 40 * s ? Math.max(3 * s, L.sp * 0.86) : Math.min(11 * s, L.sp + 0.65 * s);
     const urh = this.u(k, other.seg[0]);
@@ -417,7 +416,7 @@ export class Duel {
     L.vx = Math.cos(a) * L.sp; L.vy = Math.sin(a) * L.sp;
     const gapAt = (f: number) => { const x = hd.x + L.vx * f, y = hd.y + L.vy * f; return me.faceGap(x, y, me.dirAfter(x, y), [other]); };
     if (gapAt(1) < 2 * s) {
-      // contact: it goes only as far as touching
+      // only go as far as touching
       let lo = 0, hi = 1;
       for (let n = 0; n < 7; n++) { const m = (lo + hi) / 2; if (gapAt(m) < 2 * s) hi = m; else lo = m; }
       me.track(hd.x + L.vx * lo, hd.y + L.vy * lo);
@@ -425,7 +424,7 @@ export class Duel {
       return;
     }
     me.track(hd.x + L.vx, hd.y + L.vy);
-    // (It never fails to land in practice; if it somehow has not within a moment and a half, it draws back.)
+    // (always lands in practice, but if it hasn't after 1.5s it pulls back)
     if (el - L.t0 > 1.6) {
       if (L.final) this.impact(k, d, el, s, fx, true);
       else { this.mode[k] = "hold"; this.charging[k] = false; this.knocked = true; this.recoilAt = el; }
@@ -436,11 +435,11 @@ export class Duel {
     const me = d[k], other = d[1 - k], L = this.lunge[k];
     const p = forced ? { x: (me.seg[0].x + other.seg[0].x) / 2, y: (me.seg[0].y + other.seg[0].y) / 2 } : this.contact(me, other);
     if (L && L.final) {
-      // the clash: both are thrown apart and glide on past each other
+      // the clash: both get thrown apart and glide past each other
       if (!this.clashed) { this.clashed = true; this.clashAt = el; this.meetAt = p; fx.clash(p); }
       for (const j of [0, 1] as const) {
         const Lj = this.lunge[j], dl = this.lineDir(j);
-        // it carries on the way it was moving (only the part pressing into the other is taken off)
+        // keep going the way it was moving (minus the part pushing into the other) and turn away gradually
         const vx = Lj ? Lj.vx : Math.cos(dl) * 3 * s, vy = Lj ? Lj.vy : Math.sin(dl) * 3 * s;
         const sp = Math.max(3 * s, Math.hypot(vx, vy)), a = Math.atan2(vy, vx);
         this.exitV[j] = { x: Math.cos(a) * sp, y: Math.sin(a) * sp };
@@ -450,7 +449,7 @@ export class Duel {
       }
       return;
     }
-    // the first strike: the one struck is knocked aside, the striker recoils
+    // first strike: the one hit gets knocked aside, the striker recoils
     this.knocked = true;
     this.recoilAt = el;
     this.hitAt[1 - k] = el;
@@ -461,49 +460,49 @@ export class Duel {
     fx.knock(p);
   }
 
-  // after the clash: thrown apart, then gliding on, curving gently away from each other
+  // after the clash: thrown apart, then gliding off and curving away from each other
   private stepExit(k: 0 | 1, d: [Creature, Creature], el: number, s: number) {
     const me = d[k], hd = me.seg[0], V = this.exitV[k], dl = this.lineDir(k), lat = this.latUnit();
     const side = Math.sign(this.lane[k] - this.lane[1 - k]) || 1, since = el - this.clashAt;
     const wantA = Math.atan2(Math.sin(dl) * Math.cos(1.0) + lat.y * side * Math.sin(1.0), Math.cos(dl) * Math.cos(1.0) + lat.x * side * Math.sin(1.0));
     let sp = Math.hypot(V.x, V.y), a = Math.atan2(V.y, V.x);
-    // the turn away eases in
+    // ease into the turn away
     const rate = 0.02 + 0.045 * Math.min(1, since / 0.18);
     a += Math.max(-rate, Math.min(rate, wrap(wantA - a) * 0.1));
     sp += (3.2 * s - sp) * 0.05;
     V.x = Math.cos(a) * sp; V.y = Math.sin(a) * sp;
-    // thrown apart by the clash: a push away from the other that builds within a few steps and then fades
+    // push apart from the clash builds over a few steps and then fades
     const kick = 5.5 * s * bump(since, 0.06, 0.7);
     const mx = V.x + lat.x * side * kick, my = V.y + lat.y * side * kick;
     me.track(hd.x + mx, hd.y + my);
   }
 
-  // moves dragon k for this step (its head is placed directly; its body follows as always)
+  // move dragon k for this step (head placed directly, body follows like always)
   drive(k: 0 | 1, t: number, d: [Creature, Creature], s: number, fx: DuelFx) {
     const me = d[k], other = d[1 - k], el = t - this.t0;
-    // taking position: along its curve, easing up to speed
+    // getting into position: follow the curve, speeding up gradually
     const w = this.way[k];
     if (this.mode[k] === "way" && w) {
       me.glance = null;
       const v = Math.min(w.v, Math.max(me.speed, 2 * s) + 0.15 * s);
-      // while it is easing round the other it goes on more slowly along its route
+      // slow down along the route while going around the other so it doesn't get ahead of itself
       w.pos = Math.min(w.total, w.pos + v * (1 - 0.6 * Math.min(1, w.push / (2.2 * s))));
       const q = this.wayAt(w, w.pos);
-      // passing the other on the way (they can start tangled): it eases aside around the other's body
+      // passing the other on the way (they can start tangled up)
       const keep = 40 * s;
-      // the offset fades out over the last stretch of the route
+      // the offset fades out near the end so it lands exactly on its mark, unless the other is still in the way
       const fadeWant = w.push > 0.05 * s ? 1 : Math.min(1, (w.total - w.pos) / (160 * s));
       w.fade += Math.max(-0.02, Math.min(0.02, fadeWant - w.fade));
       const fade = w.fade;
       let p = { x: q.x + w.ox * fade, y: q.y + w.oy * fade };
       const g = me.faceGap(p.x, p.y, me.dirAfter(p.x, p.y), [other]);
-      // the push aside builds up and dies away smoothly (its rate eases), so the path never zigzags
+      // the push aside builds up and fades smoothly so the path doesn't zigzag
       const want = g < keep ? Math.min(2.2 * s, (keep - g) * 0.35) : 0;
       w.push += (want - w.push) * 0.35;
       if (w.push > 0.02 * s) {
         const b = other.bodyGap(p, 0, true);
         const nx = p.x - b.x, ny = p.y - b.y, nl = Math.hypot(nx, ny) || 1;
-        // (The direction of the push is smoothed too, so it cannot flip from step to step.)
+        // smooth the push direction too so it can't flip every step
         w.nx += (nx / nl - w.nx) * 0.2; w.ny += (ny / nl - w.ny) * 0.2;
         const nn = Math.hypot(w.nx, w.ny) || 1;
         w.ox += (w.nx / nn) * w.push; w.oy += (w.ny / nn) * w.push;
@@ -511,7 +510,7 @@ export class Duel {
         if (om > cap) { w.ox *= cap / om; w.oy *= cap / om; }
         p = { x: q.x + w.ox * fade, y: q.y + w.oy * fade };
       } else { w.ox *= 0.985; w.oy *= 0.985; }
-      // still pressing into the other's body even so (it lies right across the route): it waits for the way to clear
+      // still pressing into the other's body (it's lying across the route)
       {
         const hd = me.seg[0], gp = me.faceGap(p.x, p.y, me.dirAfter(p.x, p.y), [other]);
         if (gp < 6 * s && gp < me.faceGap(hd.x, hd.y, me.dirAt(0), [other])) {
@@ -540,18 +539,18 @@ export class Duel {
     if (r > 5.6 && k !== A && this.once("c")) this.breathe(me, other, t, 1.0);
     if (r > 6.0 && k === A && this.once("d")) this.breathe(me, other, t, 1.0);
     if (r > 7.3 && this.once("s" + k)) this.breathe(me, other, t, 1.8, true);
-    // where it wants its head: at its mark, swaying a little
+    // where it wants its head: at its mark, swaying a bit
     let gu = STANCE * s + Math.sin(t * 1.3 + k * 2) * 10 * s, gv = this.vB, su = 1.4 * s, sv = 1.2 * s;
     const hd = me.seg[0], u = this.u(k, hd), v = this.v(hd);
     const gather = (r >= G1 && r < S1 && !this.knocked) || (r >= G2 && r < S2 && !this.clashed);
     if (gather) {
-      // gathering its strength: it coils back and weaves from side to side, settling into its lane
+      // rearing back and weaving side to side, settling into its lane
       const ph = r < G2 ? 1 : 2;
       if (this.once("lane" + ph)) { const ls = Math.random() < 0.5 ? 1 : -1; this.lane = [ls * LANE * s, -ls * LANE * s]; }
       if (this.once("g" + ph + k)) fx.snort(me);
       const g2 = r >= G2, before = (g2 ? S2 : S1) - r;
       gu = (g2 ? 320 : 290) * s + Math.sin(t * 2.3 + k) * 10 * s * Math.min(1, Math.max(0, before - 0.35) * 3);
-      // the coiled moment before it strikes: it comes to rest
+      // holds still right before striking
       if (before < 0.35) gu = u;
       gv = this.vB + this.lane[k] + Math.sin(t * 3.4 + k * Math.PI) * 18 * s * Math.min(1, (r - (g2 ? G2 : G1)) * 2);
       su = 3.6 * s; sv = 2.2 * s;
@@ -561,23 +560,23 @@ export class Duel {
       else { gu = 280 * s; gv = this.vB + this.lane[k]; su = 2 * s; sv = 1.5 * s; }
     }
     if (r >= S2 && !this.clashed && this.once("L2" + k)) { this.startLunge(k, el, s, true); this.stepLunge(k, d, el, s, fx); return; }
-    // struck: knocked aside and back, fading fast
+    // got hit: knocked aside and back, fades fast
     const hit = el - this.hitAt[k];
     if (hit < 0.7) {
       const q = bump(hit, 0.12, 0.7), side = Math.sign(this.lane[k] - this.lane[1 - k]) || 1;
       gu = u + 45 * s; gv = v + side * 60 * s; su = (0.3 + 4 * q) * s; sv = (0.3 + 4 * q) * s;
     }
-    // the striker recoils: it eases to a stop against the other, then draws back briskly, then slows
+    // striker recoils: eases to a stop against the other, pulls back quickly, then slows
     const rec = el - this.recoilAt;
     if (k === A && rec < 1.2) su = Math.min(su, 0.2 * s) + (rec < 0.08 ? 0 : (1.2 + 5 * bump(rec - 0.08, 0.15, 1.1)) * s);
-    // hit by fire just now: it jerks back a little
+    // just got hit by fire, so it jerks back a little
     if (me.flinchAt > t - 0.5) { gu = Math.max(gu, u + 30 * s); su = Math.max(su, 2.4 * s * bump(t - me.flinchAt, 0.12, 0.5)); }
     this.hold(k, me, gu, gv, su, sv, s);
   }
 
-  // fire from one dragon reaching the other: it flinches once per breath (not once per spark
+  // fire hitting the other dragon: it flinches once per breath (once per spark made it shake)
   static hits(sparks: Spark[], d: [Creature, Creature], onHit: (k: number, p: P, first: boolean) => void) {
-    // bounding box of each body, so most sparks are rejected without measuring against every section
+    // bounding box per body so most sparks get rejected without checking every section
     const bb = d.map((c) => {
       let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
       for (const q of c.seg) { if (q.x < x0) x0 = q.x; if (q.x > x1) x1 = q.x; if (q.y < y0) y0 = q.y; if (q.y > y1) y1 = q.y; }

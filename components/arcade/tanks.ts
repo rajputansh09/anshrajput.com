@@ -1,4 +1,4 @@
-// Toon Tanks, rebuilt for the browser from the Unreal C++ (ATank, ATower, UHealthComponent, AProjectile
+// Toon Tanks, based on my Unreal C++ (ATank, ATower, UHealthComponent, AProjectile, AToonTanksGameMode)
 import { C, Fx, W, H, banner, bar, box, circleOut, clamp, dist, label, painted, rnd, seeded, trace, turnTo, vignette, wrap, lockOn, type Game, type Input, type Rect, type State } from "./core";
 import { sfx } from "./sfx";
 
@@ -51,7 +51,7 @@ export const LEVELS: Level[] = [
   },
 ];
 
-// the arena floor and walls are painted once per level: grass with worn dirt, then stone walls with shadows
+// floor and walls painted once per level: grass with dirt patches, stone walls with shadows
 const floors: (HTMLCanvasElement | null)[] = [];
 function floor(lv: number) {
   if (floors[lv] !== undefined) return floors[lv];
@@ -63,7 +63,7 @@ function floor(lv: number) {
       c.fillStyle = rnd2() < 0.5 ? "rgba(36,84,50,0.35)" : "rgba(14,42,26,0.35)";
       c.beginPath(); c.ellipse(x, y, r, r * 0.6, rnd2() * 3, 0, Math.PI * 2); c.fill();
     }
-    // worn dirt where tanks have driven before
+    // worn dirt patches
     for (let k = 0; k < 14; k++) {
       const x = rnd2() * W, y = rnd2() * H, r = 30 + rnd2() * 60;
       const g = c.createRadialGradient(x, y, 0, x, y, r);
@@ -80,7 +80,7 @@ function floor(lv: number) {
       c.fillStyle = "rgba(0,0,0,0.38)"; box(c, wl.x + 6, wl.y + 9, wl.w, wl.h, 6); c.fill();
       c.fillStyle = "#4e4132"; box(c, wl.x, wl.y, wl.w, wl.h, 6); c.fill();
       c.fillStyle = "#6e5b43"; box(c, wl.x + 2, wl.y + 2, wl.w - 4, wl.h - 7, 5); c.fill();
-      // stone courses
+      // stone rows
       c.strokeStyle = "rgba(40,30,20,0.55)"; c.lineWidth = 1.5;
       const horiz = wl.w >= wl.h, step = 18;
       if (horiz) for (let x = wl.x + step; x < wl.x + wl.w - 4; x += step) { c.beginPath(); c.moveTo(x, wl.y + 3); c.lineTo(x, wl.y + wl.h - 6); c.stroke(); }
@@ -141,7 +141,7 @@ export class Tanks implements Game {
     if (this.t < DELAY && sec !== this.ticked) { this.ticked = sec; sfx.play("tick"); }
     if (this.t >= DELAY && this.ticked > 0) { this.ticked = 0; sfx.play("go"); }
     if (this.live) {
-      // drive: W/S forward and back along the hull, A/D turn it (on touch, the stick points where to go)
+      // w/S drive along the hull, A/D turn
       let fwd = -inp.ay, turn = inp.ax;
       if (inp.touch) {
         const m = Math.hypot(inp.ax, inp.ay);
@@ -158,13 +158,13 @@ export class Tanks implements Game {
       const ox = k.x, oy = k.y;
       k.x += Math.cos(k.hull) * fwd * SPEED * dt;
       k.y += Math.sin(k.hull) * fwd * SPEED * dt;
-      // sweep: the tank stops at walls, towers and the arena edge
+      // stop at walls, towers and the edge
       const p = { x: k.x, y: k.y };
       for (const wl of this.walls) circleOut(p, R, wl);
       for (const tw of this.towers) { const d = dist(p, tw); if (d < R + 22) { p.x = tw.x + ((p.x - tw.x) / d) * (R + 22); p.y = tw.y + ((p.y - tw.y) / d) * (R + 22); } }
       k.x = clamp(p.x, R, W - R); k.y = clamp(p.y, R, H - R);
       if (Number.isNaN(k.x)) { k.x = ox; k.y = oy; }
-      // tread marks every few pixels driven
+      // tread marks every few px
       const moved = Math.hypot(k.x - ox, k.y - oy);
       this.tread += moved * Math.sign(fwd || 1);
       this.trail += moved;
@@ -173,7 +173,7 @@ export class Tanks implements Game {
         const nx = -Math.sin(k.hull), ny = Math.cos(k.hull);
         for (const sd of [-14, 14]) this.fx.decal(k.x + nx * sd, k.y + ny * sd, 4, "rgba(30,22,12,0.5)", 7, "bar", k.hull + Math.PI / 2);
       }
-      // the turret follows the cursor (RotateTurret)
+      // turret follows the cursor (RotateTurret)
       const stick = Math.hypot(inp.bx, inp.by) > 0.35;
       let aim = inp.aimed ? Math.atan2(inp.aimY - k.y, inp.aimX - k.x) : stick ? Math.atan2(inp.by, inp.bx) : k.hull;
       this.lock = null;
@@ -185,10 +185,10 @@ export class Tanks implements Game {
       k.turret = turnTo(k.turret, aim, (inp.assist ? 12 : 9) * dt);
       k.cool -= dt;
       const aligned = Math.abs(wrap(aim - k.turret)) < 0.25;
-      // touch: hold Fire and it keeps firing while the turret is locked on to a tower
+      // touch: holding Fire keeps shooting while locked on
       const pull = inp.firePressed || (inp.touch && inp.fire && !!this.lock && aligned) || (stick && aligned);
       if (pull && k.cool <= 0) { this.fire(k, "tank"); k.cool = inp.touch ? 0.45 : 0.35; this.shots++; }
-      // towers: track the tank only within range, and fire on a 2 second timer while it is in range and alive
+      // towers only track the tank in range and fire every 2s while it's in range and alive
       for (const tw of this.towers) {
         const inRange = dist(tw, k) <= RANGE;
         if (inRange) tw.turret = turnTo(tw.turret, Math.atan2(k.y - tw.y, k.x - tw.x), 4 * dt);
@@ -208,7 +208,7 @@ export class Tanks implements Game {
       let hit = wallT < 1 || nx < 0 || nx > W || ny < 0 || ny > H || s.life <= 0;
       let onPawn = false;
       s.x = nx; s.y = ny;
-      // onHit: damage anything but the owner, then the shell is destroyed
+      // onHit: damage anything except the owner, then destroy the shell
       if (!hit && this.state === "play") {
         const targets = s.own === "tank" ? this.towers : [this.tank];
         for (const p of targets) {
@@ -232,7 +232,7 @@ export class Tanks implements Game {
       }
     }
   }
-  // aToonTanksGameMode::ActorDied
+  // aToonTanksGameMode ActorDied
   died(p: Pawn) {
     this.fx.burst(p.x, p.y, C.fire, 46, 340, 0, 4);
     this.fx.chunks(p.x, p.y, p === this.tank ? "#3d8a5c" : "#7a6a55", 14, 280, 0, 7);
@@ -251,7 +251,7 @@ export class Tanks implements Game {
     const f = floor(this.level);
     if (f) c.drawImage(f, 0, 0); else { c.fillStyle = "#173a24"; c.fillRect(-20, -20, W + 40, H + 40); }
     this.fx.drawUnder(c);
-    // tower ranges: a red ring when you are inside one, a faint one otherwise
+    // tower range rings, red when you're inside one
     for (const tw of this.towers) {
       const inR = dist(tw, this.tank) <= RANGE;
       c.strokeStyle = inR ? "rgba(240,140,122,0.45)" : "rgba(240,140,122,0.09)"; c.lineWidth = inR ? 2 : 1;
@@ -283,7 +283,7 @@ export class Tanks implements Game {
     c.save(); c.translate(k.x, k.y);
     c.fillStyle = "rgba(0,0,0,0.35)"; c.beginPath(); c.ellipse(5, 8, 26, 20, k.hull, 0, Math.PI * 2); c.fill();
     c.rotate(k.hull);
-    // tracks, with treads that roll as the tank drives
+    // tracks, treads roll while driving
     for (const sy of [-19, 10]) {
       c.fillStyle = "#23271f"; box(c, -23, sy, 46, 9, 3); c.fill();
       c.fillStyle = "#3b4136";
@@ -314,7 +314,7 @@ export class Tanks implements Game {
     const recoil = tw.muzzle * 50;
     c.fillStyle = "#3c3329"; box(c, 2 - recoil, -4, 27, 8, 3); c.fill();
     if (tw.muzzle > 0) { c.fillStyle = "rgba(255,170,120,0.9)"; c.beginPath(); c.arc(34, 0, 8 * (tw.muzzle / 0.09), 0, Math.PI * 2); c.fill(); }
-    // the eye glows brighter in the half second before it fires, so a sharp player can dodge
+    // eye glows brighter just before it fires so you have a chance to dodge
     const inR = dist(tw, this.tank) <= RANGE, charge = inR && this.live ? clamp(1 - tw.cool / 0.6, 0, 1) : 0;
     c.fillStyle = tw.flash > 0 ? "#fff" : C.danger; c.beginPath(); c.arc(0, 0, 9, 0, Math.PI * 2); c.fill();
     if (charge > 0) {

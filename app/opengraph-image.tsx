@@ -11,7 +11,7 @@ export default function OG() {
   return new ImageResponse(
     (
       <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", background: "#07110c", color: "#e6efe8", padding: 72, position: "relative", fontFamily: "sans-serif" }}>
-        {/* the detailed dragon crest as a faint watermark, bleeding off the right edge */}
+        {/* faded crest watermark, bleeding off the right */}
         <img src={uri(dragonMark("og", false))} width={720} height={720} style={{ position: "absolute", right: -210, top: -45, opacity: 0.14 }} alt="" />
         <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 28 }}>
           <img src={uri(dragonMark("om", false))} width={56} height={56} alt="" />

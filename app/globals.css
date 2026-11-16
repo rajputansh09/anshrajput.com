@@ -119,7 +119,7 @@ kbd {
 .btn-small { padding: 8px 14px; font-size: 14px; }
 .link-btn { background: none; border: 0; padding: 0; color: var(--moss); text-decoration: underline; text-underline-offset: 3px; }
 
-/* live status board */
+/* status board */
 .board {
   margin-top: 56px; border: 1px solid var(--line-2); border-radius: var(--r);
   background: var(--bg-2);
@@ -482,12 +482,12 @@ kbd {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 
-/* print: used by /resume */
+/* print (used by /resume) */
 @media print {
   .no-print { display: none !important; }
 }
 
-/* footer links and the plain pages (privacy, not found, errors) */
+/* footer links and the simple pages */
 .foot-links { display: flex; flex-wrap: wrap; gap: 6px 18px; }
 .foot-links a { color: var(--muted); text-decoration: none; }
 .foot-links a:hover { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
@@ -510,7 +510,6 @@ kbd {
 .plain-body a { color: var(--moss); text-underline-offset: 3px; }
 .form-note a { color: var(--moss); text-underline-offset: 3px; }
 
-/* motion */
 @keyframes rise { from { opacity: 0; transform: translateY(16px); } }
 .hero h1 { animation: rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
 .hero .lede { animation: rise 0.9s 0.12s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
@@ -527,7 +526,6 @@ kbd {
   .rv { opacity: 1; transform: none; }
 }
 
-/* back to top: bottom right on desktop (the dragon rail sits mid-right) */
 .to-top {
   position: fixed; right: 18px; bottom: 18px; z-index: 34; display: grid; place-items: center; width: 46px; height: 46px;
   border-radius: 12px; border: 1px solid var(--brass); background: var(--brass); color: #1a1206;

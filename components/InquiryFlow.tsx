@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-// shows the Twish contact pipeline: a person gets two emails sent; a bot is dropped by the honeypot
+// demo of the Twish contact flow: a real person gets two emails, a bot gets caught by the honeypot
 type Stage = "idle" | "sending" | "server" | "delivered" | "bot-sending" | "blocked";
 
 export default function InquiryFlow() {

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-// a 3-question sample of UCert's gap analysis, so visitors can feel how it works
+// small 3 question sample of the UCert gap analysis
 const questions = [
   { clause: "4.3", topic: "Scope", q: "Is the scope of your quality management system written down?" },
   { clause: "5.2", topic: "Quality policy", q: "Is your quality policy communicated and understood by staff?" },

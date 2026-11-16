@@ -1,4 +1,4 @@
-// tiny synthesized sound set for the skill astrolabe
+// sounds for the astrolabe, all generated with Web Audio (no audio files)
 type AC = AudioContext;
 let ctx: AC | null = null;
 let master: GainNode | null = null;
@@ -31,7 +31,7 @@ const noise = (c: AC, secs: number) => {
   return src;
 };
 
-// a pentatonic scale per ring, so waking runes plays something musical rather than random beeps
+// one pentatonic scale per ring so it sounds musical instead of random
 const SCALE = [0, 2, 4, 7, 9, 12, 14, 16, 19];
 const BASE = [523.25, 392.0, 329.63, 261.63];
 

@@ -1,4 +1,4 @@
-// where Ansh is right now, for the "It's 8:38 PM in Edmonton" line
+// where I am right now, for the "It's 8:38 PM in Edmonton" line in the header
 import { get, put } from "@vercel/blob";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { site } from "../../../lib/site";
@@ -18,7 +18,7 @@ const validZone = (tz: string) => {
   }
 };
 
-// compares SHA-256 digests in constant time, so neither the token nor its length leaks through timing
+// constant time compare of the SHA-256 hashes so the token can't leak through timing
 const digest = (s: string) => createHash("sha256").update(s).digest();
 const authorized = (req: Request) => {
   const want = process.env.WHEREABOUTS_TOKEN;
@@ -27,13 +27,13 @@ const authorized = (req: Request) => {
   return timingSafeEqual(digest(got), digest(want));
 };
 
-// wrong-token attempts are limited per IP (best-effort, per server instance) to slow down guessing
+// limit wrong token attempts per IP to slow down guessing
 const misses = new Map<string, number[]>();
 const MISS_LIMIT = 10;
 const MISS_WINDOW = 15 * 60 * 1000;
 const ipOf = (req: Request) => (req.headers.get("x-forwarded-for")?.split(",")[0] ?? req.headers.get("x-real-ip") ?? "unknown").trim();
 
-// plain text only: no control characters, no markup characters, capped
+// plain text only, no control or markup characters, capped
 const clean = (v: unknown, max: number) =>
   typeof v === "string" ? v.replace(/[\u0000-\u001f\u007f<>"`]/g, "").trim().slice(0, max) : "";
 const header = (v: string | null) => {
@@ -66,7 +66,7 @@ export async function GET() {
       }
     }
   } catch (err) {
-    // no store yet or a read hiccup: fall back to home base, and leave a note in the logs
+    // nothing saved yet or the read failed: use Edmonton and log it
     console.error("whereabouts: read failed, using home base", err instanceof Error ? err.message : err);
   }
   return Response.json(place, { headers: { "Cache-Control": "public, s-maxage=120, stale-while-revalidate=600" } });
@@ -84,13 +84,13 @@ export async function POST(req: Request) {
   }
 
   const h = req.headers;
-  // optional manual override in the body, e.g
+  // optional manual override, e.g
   let body: Record<string, unknown> = {};
   try {
     const parsed = await req.json();
     if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) body = parsed;
   } catch {
-    // an empty body is the normal case
+    // empty body is the normal case
   }
   const place: Place = {
     city: clean(body.city, 60) || clean(header(h.get("x-vercel-ip-city")), 60),

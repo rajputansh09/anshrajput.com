@@ -1,4 +1,4 @@
-// iPhone and iPad icon (Safari tabs, bookmarks, home screen), at the address iOS asks for by name
+// iOS home screen / bookmark icon
 import { ImageResponse } from "next/og";
 import { dragonMark } from "../../lib/dragonMark";
 

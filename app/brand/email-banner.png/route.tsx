@@ -1,4 +1,4 @@
-// email banner, rendered to PNG by the site: a dark Chinatown night with the dragon crest and name
+// email banner as a PNG since email clients can't render SVG
 import { ImageResponse } from "next/og";
 import { dragonMark } from "../../../lib/dragonMark";
 import { emailBannerScene } from "../../../lib/emailArt";

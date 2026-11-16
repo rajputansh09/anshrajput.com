@@ -1,4 +1,4 @@
-// Obstacle Assault, rebuilt for the browser from the Unreal C++
+// Obstacle Assault, side on, based on my Unreal C++ (AMoving_Platform)
 import { C, Fx, W, H, banner, box, clamp, fmt, label, overlap, seeded, vignette, type Game, type Input, type Rect, type State } from "./core";
 import { sfx } from "./sfx";
 
@@ -98,7 +98,7 @@ export class Obstacle implements Game {
     this.dead = 0.45;
     sfx.play("die");
   }
-  // aMoving_Platform::MovePlatform and RotatePlatform
+  // aMoving_Platform MovePlatform and RotatePlatform
   movePlatforms(dt: number) {
     for (const s of this.solids) {
       if (s.kind === "move") {
@@ -123,7 +123,7 @@ export class Obstacle implements Game {
     for (const h of this.hammers) {
       const before = Math.sin(h.a);
       h.a += h.w * dt;
-      // a whoosh as each head passes the bottom of its swing, if it is on screen
+      // whoosh as each hammer passes the bottom of its swing, if it's on screen
       if (before < 0.97 && Math.sin(h.a) >= 0.97 && h.x > this.cam - 60 && h.x < this.cam + W + 60) sfx.play("swing", 0.7);
     }
   }
@@ -135,7 +135,7 @@ export class Obstacle implements Game {
     if (this.dead > 0) { this.dead -= dt; if (this.dead <= 0) this.spawn(); return; }
     const p = this.p;
     p.squash = Math.max(0, p.squash - dt * 5);
-    // carried by the platform it stands on
+    // move with the platform you're standing on
     if (p.on && (p.on.kind === "move" || p.on.kind === "fall")) { p.x += p.on.dx ?? 0; p.y += p.on.dy ?? 0; }
     const want = clamp(inp.ax, -1, 1) * RUN;
     p.vx += (want - p.vx) * Math.min(1, dt * (p.on ? 14 : 6));
@@ -148,7 +148,7 @@ export class Obstacle implements Game {
       sfx.play("jump");
       this.fx.smoke(p.x + PW / 2, p.y + PH, 3, "rgba(200,210,200,1)", 6, -10);
     }
-    // short hop when the button is let go early
+    // short hop if you let go early
     if (!inp.fire && p.vy < -JUMP * 0.45) p.vy = -JUMP * 0.45;
     const live = this.solids.filter((s) => !s.gone);
     p.x += p.vx * dt;
@@ -183,7 +183,7 @@ export class Obstacle implements Game {
       this.fx.text(this.flags[k] + 16, this.groundAt(this.flags[k]) - 110, "Checkpoint", C.moss, 15);
       sfx.play("flag");
     }
-    // hammers: the head is the dangerous part
+    // hammers, only the head hurts
     for (const h of this.hammers) {
       const hx = h.x + Math.cos(h.a) * h.L, hy = h.y + Math.sin(h.a) * h.L;
       const cx = clamp(hx, p.x, p.x + PW), cy = clamp(hy, p.y, p.y + PH);
@@ -203,7 +203,7 @@ export class Obstacle implements Game {
     const sky = c.createLinearGradient(0, 0, 0, H);
     sky.addColorStop(0, top); sky.addColorStop(1, bot);
     c.fillStyle = sky; c.fillRect(0, 0, W, H);
-    // stars, a moon, drifting clouds
+    // stars, moon and clouds
     c.fillStyle = "rgba(230,240,255,0.7)";
     for (let k = 0; k < 60; k++) { const x = ((k * 173 - this.cam * 0.03) % W + W) % W, y = (k * 71) % 220; c.globalAlpha = 0.3 + ((k * 13) % 7) / 10 + Math.sin(t * 2 + k) * 0.1; c.fillRect(x, y, k % 4 ? 1.5 : 2.5, k % 4 ? 1.5 : 2.5); }
     c.globalAlpha = 1;
@@ -222,7 +222,7 @@ export class Obstacle implements Game {
       for (let x = 0; x <= W; x += 16) { const wx = x + this.cam * k; c.lineTo(x, base - Math.sin(wx * 0.006 + k * 9) * amp - Math.sin(wx * 0.017) * amp * 0.3); }
       c.lineTo(W, H); c.fill();
     }
-    // the abyss glows faintly far below
+    // faint glow from the pit below
     const abyss = c.createLinearGradient(0, H - 70, 0, H);
     abyss.addColorStop(0, "rgba(255,140,60,0)"); abyss.addColorStop(1, "rgba(255,120,50,0.12)");
     c.fillStyle = abyss; c.fillRect(0, H - 70, W, 70);
@@ -241,7 +241,7 @@ export class Obstacle implements Game {
       if (s.gone || s.x > this.cam + W + 40 || s.x + s.w < this.cam - 40) continue;
       if (s.kind === "ground") {
         c.fillStyle = "#1a2f24"; c.fillRect(s.x, s.y, s.w, s.h);
-        // stone blocks under a mossy lip
+        // stone blocks with moss on top
         c.fillStyle = "rgba(0,0,0,0.2)";
         for (let row = 0; row < 6; row++) for (let x = s.x + ((row % 2) * 23); x < s.x + s.w - 10; x += 46) c.fillRect(x + 2, s.y + 14 + row * 22, 40, 2);
         c.fillStyle = "#3d7a55"; c.fillRect(s.x, s.y, s.w, 6);
@@ -258,7 +258,7 @@ export class Obstacle implements Game {
           const m = Math.hypot(s.vx!, s.vy!);
           c.strokeStyle = "rgba(216,180,106,0.22)"; c.setLineDash([4, 6]); c.lineWidth = 1.5;
           c.beginPath(); c.moveTo(s.sx! + s.w / 2, s.sy! + 9); c.lineTo(s.sx! + s.w / 2 + (s.vx! / m) * s.dist!, s.sy! + 9 + (s.vy! / m) * s.dist!); c.stroke(); c.setLineDash([]);
-          // glowing runes on the underside, so moving platforms read at a glance
+          // glowing runes underneath so moving platforms are easy to spot
           c.fillStyle = "rgba(240,215,154,0.6)"; for (let x = s.x + 12; x < s.x + s.w - 8; x += 18) c.fillRect(x, s.y + 11, 6, 2);
         }
       }
@@ -266,7 +266,7 @@ export class Obstacle implements Game {
     for (const h of this.hammers) {
       if (h.x < this.cam - 260 || h.x > this.cam + W + 260) continue;
       const hx = h.x + Math.cos(h.a) * h.L, hy = h.y + Math.sin(h.a) * h.L;
-      // motion trail behind the head
+      // trail behind the hammer head
       for (let k = 1; k <= 4; k++) {
         const a = h.a - Math.sign(h.w) * k * 0.08, tx = h.x + Math.cos(a) * h.L, ty = h.y + Math.sin(a) * h.L;
         c.fillStyle = `rgba(200,210,205,${0.09 - k * 0.018})`; c.beginPath(); c.arc(tx, ty, h.head, 0, Math.PI * 2); c.fill();
@@ -283,7 +283,7 @@ export class Obstacle implements Game {
       c.fillStyle = "#4c5853"; c.fillRect(8, -h.head + 4, 4, h.head * 2 - 8);
       c.restore();
     }
-    // runner, with squash on landing and stretch in the air
+    // runner, squashes on landing and stretches in the air
     const p = this.p;
     if (this.dead <= 0) {
       c.save(); c.translate(p.x + PW / 2, p.y + PH);
@@ -301,7 +301,7 @@ export class Obstacle implements Game {
     this.fx.draw(c);
     c.restore();
     vignette(c, 0.45);
-    // progress bar with flag ticks
+    // progress bar with flag marks
     const goal = this.course.goal;
     c.fillStyle = "rgba(0,0,0,0.45)"; box(c, 20, H - 16, W - 40, 6, 3); c.fill();
     c.fillStyle = C.moss; box(c, 20, H - 16, (W - 40) * clamp(this.p.x / goal, 0, 1), 6, 3); c.fill();

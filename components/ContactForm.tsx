@@ -141,7 +141,7 @@ export default function ContactForm() {
         {show("message") && <em>{show("message")}</em>}
       </label>
 
-      {/* honeypot: hidden from people, irresistible to bots */}
+      {/* honeypot: hidden from people, bots fill it in */}
       <label className="hp" aria-hidden="true">
         Leave this empty
         <input tabIndex={-1} autoComplete="off" value={v.website} onChange={set("website")} />

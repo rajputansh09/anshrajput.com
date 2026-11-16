@@ -1,5 +1,5 @@
 "use client";
-// split out of Dragon.tsx so each source file stays small; the code is unchanged
+// drawing helpers for limbs and bone blades (split out of Dragon.tsx)
 export function makeParts(ctx: CanvasRenderingContext2D) {
   const limb = (x1: number, y1: number, x2: number, y2: number, w1: number, w2: number) => {
     const a = Math.atan2(y2 - y1, x2 - x1);
@@ -15,7 +15,7 @@ export function makeParts(ctx: CanvasRenderingContext2D) {
     ctx.stroke();
   };
 
-  // bone gradient shared by spines, horns, spurs and talons (dark root, pale tip), as on the crest
+  // bone gradient for spines, horns and claws, dark at the root and pale at the tip
   const boneFill = (x1: number, y1: number, x2: number, y2: number) => {
     const g = ctx.createLinearGradient(x1, y1, x2, y2);
     g.addColorStop(0, "#5a4320");
@@ -23,7 +23,7 @@ export function makeParts(ctx: CanvasRenderingContext2D) {
     g.addColorStop(1, "#fbf0d0");
     return g;
   };
-  // a curved bone blade from (x, y) toward angle ang
+  // curved bone blade from (x, y) pointing at ang
   const blade = (x: number, y: number, ang: number, len: number, base: number, bend = 0.18) => {
     const nx = Math.cos(ang + Math.PI / 2), ny = Math.sin(ang + Math.PI / 2);
     const tx = x + Math.cos(ang + bend) * len, ty = y + Math.sin(ang + bend) * len;

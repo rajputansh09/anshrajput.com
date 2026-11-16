@@ -1,11 +1,11 @@
 "use client";
 
-// shown if something on a page fails while it renders
+// fallback if a page crashes while rendering
 import { useEffect } from "react";
 
 export default function ErrorPage({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
-    // logged in the browser console for debugging; no details are shown on the page
+    // log to the console only, don't show details on the page
     console.error("page error", error.digest ?? error.message);
   }, [error]);
   return (

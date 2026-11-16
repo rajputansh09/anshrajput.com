@@ -1,6 +1,6 @@
 "use client";
 
-// on-screen controls for phones and tablets
+// touch controls for phones and tablets
 import { useRef, type MutableRefObject, type PointerEvent as RPE } from "react";
 
 export type Stick = { x: number; y: number; id: number; cx: number; cy: number };
@@ -23,9 +23,9 @@ type Props = {
 const R = 58;
 const DEAD = 0.12;
 const AIM_DRAG = 18;
-const buzz = (ms: number) => { try { navigator.vibrate?.(ms); } catch { /* no vibration here */ } };
+const buzz = (ms: number) => { try { navigator.vibrate?.(ms); } catch { /* no vibration */ } };
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
-const capture = (e: RPE<HTMLElement>) => { try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* a nicety */ } };
+const capture = (e: RPE<HTMLElement>) => { try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* not critical */ } };
 
 export default function TouchPad(p: Props) {
   const base = useRef<HTMLDivElement>(null);
@@ -35,7 +35,7 @@ export default function TouchPad(p: Props) {
   const o = useRef({ x: 0, y: 0, lastY: 0 });
   const f = useRef({ id: -1, x: 0, y: 0 });
 
-  // left zone -------------------------------------------------------------------------------------------------
+  // left zone
   const place = (x: number, y: number) => {
     const b = base.current;
     if (b) { b.style.left = `${x}px`; b.style.top = `${y}px`; }
@@ -54,7 +54,7 @@ export default function TouchPad(p: Props) {
     let dy = p.axis === "x" ? 0 : e.clientY - r.top - o.current.y;
     const d = Math.hypot(dx, dy);
     if (d > R) {
-      // past the rim: the stick slides along with the thumb
+      // past the edge, so drag the stick along with the thumb
       o.current.x = clamp(o.current.x + dx - (dx * R) / d, R, r.width - R);
       if (p.axis !== "x") o.current.y = clamp(o.current.y + dy - (dy * R) / d, R, r.height - R);
       place(o.current.x, o.current.y);
@@ -85,7 +85,7 @@ export default function TouchPad(p: Props) {
     if (knob.current) knob.current.style.transform = "";
   };
 
-  // right zone ------------------------------------------------------------------------------------------------
+  // right zone
   const rightDown = (e: RPE<HTMLDivElement>) => {
     if (f.current.id !== -1) return;
     capture(e);

@@ -1,5 +1,5 @@
 "use client";
-// the living world behind the page: a dark Chinatown in the side margins
+// background world: Chinatown in the side margins
 import type { Wall } from "./types";
 import { roof } from "../../lib/emailArt";
 
@@ -25,14 +25,14 @@ export class World {
   private wins: Win[] = [];
   private townOpacity = 1;
 
-  // town: a canvas of its own under the scene, drawn once per resize (the houses never move
+  // the town gets its own canvas, redrawn on resize
   layout(w: number, h: number, s: number, dpr: number, hb: number, rail: DOMRect | null, town: HTMLCanvasElement) {
     this.w = w; this.h = h; this.s = s;
     this.phone = w < 700;
     const gutter = Math.max(20, Math.min(48, w * 0.05));
     this.margin = (w - Math.min(w, WRAP)) / 2 + gutter * 0.7;
     this.wide = !this.phone && this.margin >= 90;
-    // walls: one jutting in from each side, clear of the dragon rail and the navigation bar
+    // one wall sticking out from each side, away from the rail and the nav
     this.walls = [];
     this.live = false;
     if (this.wide) {
@@ -44,11 +44,11 @@ export class World {
       else if (h - (rail ? rail.bottom : h * 0.5 + 170) > 260) this.walls.push({ x: w - L, y: Math.round((rail ? rail.bottom : h * 0.5 + 170) + 60), w: L + 12, h: T, seed: 0.7 });
     }
     this.buildTown(dpr, town);
-    // lanterns already rising stay where they are; drop any now off-screen to the side
+    // keep lanterns that are already rising, drop any that are now off screen
     this.sky = this.sky.filter((o) => o.x > -20 && o.x < w + 20);
   }
 
-  // ---------- The town (side view, drawn once per resize) ----------
+  // town (side view, drawn on resize)
   private buildTown(dpr: number, c: HTMLCanvasElement) {
     const { w, h } = this;
     this.town = c;
@@ -93,7 +93,7 @@ export class World {
     g.fillStyle = mist;
     g.fillRect(0, H - 120 * k, w, 120 * k);
     row(H + 2, 60, 88, this.phone ? 2 : 3, true, "#0a1a12", "rgba(216, 180, 106, 0.24)");
-    // windows are drawn every frame (they flicker), so convert them to screen space now
+    // windows flicker every frame, so convert them to screen space now
     for (const wn of this.wins) wn.y += h - H;
   }
 
@@ -118,7 +118,7 @@ export class World {
         } else if (r() < 0.75) this.wins.push({ x: x - 5 * k, y: y - hgt + 6 * k, w: 10 * k, h: 11 * k, ph: r() * 9, base: 0.45 + r() * 0.4 });
       }
       const above = i < tiers - 1 ? (ww * 0.7) / 2 - 2 : null;
-      // the roof outline is shared with the email banner; scale it about the wall top
+      // same roof shape as the email banner, scaled from the wall top
       g.save();
       g.translate(x, y - hgt);
       g.scale(k, k);
@@ -133,7 +133,7 @@ export class World {
     }
   }
 
-  // ---------- Each step ----------
+  // step
   step(t: number, hb: number) {
     const { w, h, s } = this;
     const cap = this.phone ? 3 : this.wide ? 8 : 5;
@@ -150,7 +150,7 @@ export class World {
     for (const o of this.sky) {
       o.y += o.vy;
       o.x = o.bx + Math.sin(t * 0.55 + o.ph) * 14 * s + Math.sin(t * 1.7 + o.ph * 2) * 3;
-      // fade in rising out of the street, fade out under the navigation bar
+      // fade in coming up from the street, fade out under the nav
       o.a = Math.max(0, Math.min(1, (h + 40 - o.y) / 90, (o.y - hb - 6) / 130));
     }
     this.sky = this.sky.filter((o) => o.y > hb - 4);
@@ -158,7 +158,7 @@ export class World {
     this.rings = this.rings.filter((g) => g.age < 0.6);
   }
 
-  // ---------- Drawing ---------- Behind the page, over the town: flickering windows and the rising lanterns
+  // drawing Behind the page: flickering windows and rising lanterns
   drawScene(g: CanvasRenderingContext2D, t: number) {
     const { w, h } = this;
     g.clearRect(0, 0, w, h);
@@ -198,7 +198,7 @@ export class World {
     g.fillStyle = "#2a1a0f";
     g.fillRect(x - r * 0.45, y - r - 3, r * 0.9, 5);
     g.fillRect(x - r * 0.45, y + r - 2, r * 0.9, 5);
-    // a small flame showing through the open base, and a tassel trailing below
+    // little flame showing through the bottom, and a tassel
     g.fillStyle = `rgba(255, 230, 160, ${0.8 * pulse})`;
     g.beginPath(); g.ellipse(x, y + r * 0.55, r * 0.18, r * 0.28, 0, 0, Math.PI * 2); g.fill();
     g.strokeStyle = "#d8b46a";
@@ -207,7 +207,7 @@ export class World {
     g.restore();
   }
 
-  // on the dragon layer, under the dragons: the walls (top view, brick with a tiled coping) and burst flashes
+  // on the dragon layer under the dragons: walls (top view, brick with tiles on top) and burst flashes
   drawWalls(g: CanvasRenderingContext2D, dpr: number) {
     if (!this.live) return;
     for (const wl of this.walls) {
@@ -220,12 +220,12 @@ export class World {
       g.fillStyle = "#3b2119";
       g.fillRect(wl.x, wl.y, wl.w, wl.h);
       g.restore();
-      // running-bond bricks either side of the coping
+      // bricks on both sides of the tiles
       g.save();
       g.beginPath(); g.rect(wl.x, wl.y, wl.w, wl.h); g.clip();
       g.fillStyle = "#2a150e";
       g.fillRect(wl.x, wl.y, wl.w, wl.h);
-      // old bricks, each a slightly different shade, in running bond, with dark mortar between
+      // old bricks in slightly different shades with dark mortar
       const rowH = wl.h / 6;
       let sd = Math.floor(wl.seed * 1000) + 3;
       const rnd = () => ((sd = (sd * 16807) % 2147483647) - 1) / 2147483646;
@@ -239,7 +239,7 @@ export class World {
           g.fillRect(x + 1, wl.y + rI * rowH + 1, 16, 1);
         }
       }
-      // coping: a ridge of dark glazed tiles down the middle, each tile rounded, with a brass rim along the edge
+      // dark glazed tiles down the middle with a brass edge
       const cy = wl.y + wl.h / 2, ch = rowH * 2.6;
       g.fillStyle = "#101a15";
       g.fillRect(wl.x, cy - ch / 2, wl.w, ch);
@@ -256,7 +256,7 @@ export class World {
       g.fillRect(wl.x, cy - ch / 2, wl.w, 1);
       g.fillRect(wl.x, cy + ch / 2 - 1, wl.w, 1);
       g.restore();
-      // tile end caps on the open end, and a thin outline
+      // end caps and a thin outline
       const open = wl.x < 0 ? wl.x + wl.w : wl.x;
       g.fillStyle = "#1b2722";
       g.beginPath(); g.arc(open, cy, ch * 0.62, 0, Math.PI * 2); g.fill();

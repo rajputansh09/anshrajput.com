@@ -1,4 +1,4 @@
-// Simple Shooter (Frozen Fury: Robo Rampage), rebuilt for the browser from the Unreal C++ (AGun
+// Simple Shooter (Frozen Fury: Robo Rampage), top down, based on my Unreal C++ (AGun, AShooterCharacter
 import { C, Fx, Nav, W, H, banner, bar, box, circleOut, clamp, dist, fmt, label, painted, rnd, seeded, segCircle, trace, turnTo, vignette, lockOn, type Game, type Input, type Rect, type State, type V } from "./core";
 import { sfx } from "./sfx";
 
@@ -46,7 +46,7 @@ export const LEVELS: Level[] = [
   },
 ];
 
-// floor and walls painted once per level: frosted steel tiles, hazard stripes, lit wall edges
+// floor and walls painted once per level: frosty steel tiles, hazard stripes, lit wall edges
 const floors: (HTMLCanvasElement | null)[] = [];
 function floor(lv: number) {
   if (floors[lv] !== undefined) return floors[lv];
@@ -58,13 +58,13 @@ function floor(lv: number) {
       c.fillRect(x + 1, y + 1, 38, 38);
       c.fillStyle = "rgba(159,217,242,0.05)"; c.fillRect(x + 3, y + 3, 2, 2); c.fillRect(x + 35, y + 35, 2, 2);
     }
-    // frost creeping across the floor
+    // frost on the floor
     for (let k = 0; k < 26; k++) {
       const x = r() * W, y = r() * H, rr = 40 + r() * 90, g = c.createRadialGradient(x, y, 0, x, y, rr);
       g.addColorStop(0, "rgba(200,235,255,0.09)"); g.addColorStop(1, "rgba(200,235,255,0)");
       c.fillStyle = g; c.beginPath(); c.arc(x, y, rr, 0, Math.PI * 2); c.fill();
     }
-    // ceiling lights pooled on the floor
+    // light pools from the ceiling lamps
     for (let k = 0; k < 6; k++) {
       const x = 120 + (k % 3) * 360, y = k < 3 ? 140 : 400, g = c.createRadialGradient(x, y, 0, x, y, 170);
       g.addColorStop(0, "rgba(170,220,255,0.10)"); g.addColorStop(1, "rgba(170,220,255,0)");
@@ -111,7 +111,7 @@ export class Shooter implements Game {
     this.tracers = []; this.fx = new Fx();
   }
   sees(a: V, b: V) { return trace(a.x, a.y, b.x, b.y, this.walls) >= 1; }
-  // aGun::GunTrace and PullTrigger: the first wall or robot along the line takes the shot
+  // aGun GunTrace and PullTrigger: first wall or robot on the line gets hit
   shoot(from: V, ang: number, me: boolean) {
     const x1 = from.x + Math.cos(ang) * RANGE, y1 = from.y + Math.sin(ang) * RANGE;
     const x0 = from.x + Math.cos(ang) * (R + 4), y0 = from.y + Math.sin(ang) * (R + 4);
@@ -129,7 +129,7 @@ export class Shooter implements Game {
         this.hits++;
         sfx.play("metal");
         const b = victim as Bot;
-        // shot from out of sight: it now knows where you are
+        // got shot from out of sight, so now it knows where you are
         b.last = { x: this.me.x, y: this.me.y };
         if (b.hp <= 0) {
           b.dead = true; b.wreck = 4;
@@ -147,7 +147,7 @@ export class Shooter implements Game {
         if (this.me.hp <= 0) { this.state = "lost"; this.fx.burst(this.me.x, this.me.y, C.moss, 40, 300, 0, 4); this.fx.chunks(this.me.x, this.me.y, "#244a5c", 12, 260, 0, 6); sfx.play("boom"); sfx.play("lose"); }
       }
     } else {
-      // sparks fly back off the wall, and a scorch mark stays
+      // sparks off the wall and a scorch mark
       this.fx.spray(hx, hy, ang + Math.PI, 1.2, C.ice, 6, 200, 1.6);
       this.fx.decal(hx, hy, 5, "rgba(0,0,0,0.5)", 8);
     }
@@ -202,7 +202,7 @@ export class Shooter implements Game {
       if (goal) this.moveBot(b, goal, dt);
     }
   }
-  // moveTo on the nav grid: replan when the goal has moved, then walk to the farthest waypoint in plain sight
+  // moveTo on the nav grid: replan when the goal moves, then walk to the farthest waypoint in sight
   moveBot(b: Bot, goal: V, dt: number) {
     b.repath -= dt;
     if (!b.pathFor || dist(goal, b.pathFor) > 30 || b.repath <= 0 || !b.path.length) {
@@ -227,7 +227,7 @@ export class Shooter implements Game {
     this.fx.drawUnder(c);
     for (const b of this.bots) {
       if (b.dead) { this.wreck(c, b); continue; }
-      // a thin laser sight warns that a robot that sees you is about to fire
+      // laser sight warns you right before a robot fires
       if (b.seen && b.cool < 0.35) {
         c.strokeStyle = `rgba(240,120,100,${0.15 + (0.35 - b.cool)})`; c.lineWidth = 1;
         const tt = trace(b.x, b.y, b.x + Math.cos(b.a) * RANGE, b.y + Math.sin(b.a) * RANGE, this.walls);
@@ -256,7 +256,7 @@ export class Shooter implements Game {
     for (let k = 0; k < 50; k++) { const x = (k * 97 + t * 20) % W, y = (k * 53 + t * (30 + (k % 5) * 8)) % H; c.fillRect(x, y, k % 3 ? 2 : 3, k % 3 ? 2 : 3); }
     c.restore();
     vignette(c, 0.55);
-    // low health tints the edges red
+    // red edges when health is low
     if (this.me.hp <= 30 && this.state === "play") { c.fillStyle = `rgba(240,90,70,${0.08 + Math.sin(t * 6) * 0.04})`; c.fillRect(0, 0, W, H); }
     this.fx.drawFlash(c);
     // health
@@ -276,7 +276,7 @@ export class Shooter implements Game {
     c.save(); c.translate(x, y);
     c.fillStyle = "rgba(0,0,0,0.4)"; c.beginPath(); c.arc(4, 6, R + 1, 0, Math.PI * 2); c.fill();
     c.rotate(a);
-    // feet step as it walks
+    // feet step while walking
     const s = Math.sin(walk * 0.12) * 4;
     c.fillStyle = dark; box(c, -6 + s, -R - 2, 12, 6, 2); c.fill(); box(c, -6 - s, R - 4, 12, 6, 2); c.fill();
     // gun arm

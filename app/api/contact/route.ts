@@ -1,4 +1,4 @@
-// contact form endpoint
+// contact form API
 import { site } from "../../../lib/site";
 import { ownerEmail, senderEmail } from "../../../lib/email";
 
@@ -17,7 +17,7 @@ const REASONS = ["Co-op or internship", "Freelance project", "Collaboration", "J
 
 const recent = (list: number[] | undefined, now: number) => (list ?? []).filter((t) => now - t < HOUR);
 
-// one line of plain text: no control characters or line breaks (stops header injection), single spaces, capped
+// single line text: strip control chars and line breaks (no header injection), collapse spaces, cap length
 const line = (v: unknown, max: number) =>
   String(v ?? "")
     .replace(/[\u0000-\u001f\u007f]+/g, " ")
@@ -25,14 +25,14 @@ const line = (v: unknown, max: number) =>
     .trim()
     .slice(0, max);
 
-// free text: keeps line breaks, drops other control characters
+// multi line text: keep line breaks, strip other control chars
 const text = (v: unknown) =>
   String(v ?? "")
     .replace(/\r\n?/g, "\n")
     .replace(/[\u0000-\u0008\u000b-\u001f\u007f]/g, "")
     .trim();
 
-// requests must come from this site: production, its Vercel previews, or local development
+// only allow requests from my site: production, Vercel previews and localhost
 function allowedOrigin(req: Request) {
   const origin = req.headers.get("origin");
   if (!origin) return false;
@@ -71,7 +71,7 @@ async function send(key: string, payload: Record<string, unknown>) {
   }
 }
 
-// logs the address with the middle hidden, e.g
+// mask the address in logs, e.g
 const mask = (a: string) => a.replace(/^(.{2})[^@]*(@.*)$/, "$1***$2");
 
 const fail = (error: string, status: number) => Response.json({ error }, { status, headers: { "Cache-Control": "no-store" } });
@@ -138,14 +138,14 @@ export async function POST(req: Request) {
     console.error("contact: owner email failed", err instanceof Error ? err.message : err);
     return fail("send_failed", 502);
   }
-  // only successful sends count toward the limits, so a hiccup never locks someone out
+  // only count successful sends so a random failure doesn't lock someone out
   byEmail.set(email, [...mine, now]);
   byIp.set(ip, [...fromIp, now]);
   all.push(now);
   if (byEmail.size > 5000) byEmail.clear();
   if (byIp.size > 5000) byIp.clear();
 
-  // the confirmation is a courtesy: if it fails, the message still reached me
+  // if the confirmation fails that's fine, I still got the message
   try {
     await send(key, {
       from,
@@ -161,7 +161,7 @@ export async function POST(req: Request) {
   return Response.json({ ok: true, ref }, { headers: { "Cache-Control": "no-store" } });
 }
 
-// the first word of the name, used to greet the sender
+// first name for the greeting
 function greetName(name: string) {
   const first = name.split(" ")[0] ?? "";
   return first.length <= 24 && /^[\p{L}\p{M}'.-]+$/u.test(first) && !/\./.test(first) ? first : "there";

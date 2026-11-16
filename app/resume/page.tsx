@@ -109,7 +109,7 @@ const skills: [string, string][] = [
   ["Additional", "English, Hindi, Punjabi (Fluent), Spanish (Beginner) | Canadian PR, open to relocation"],
 ];
 
-// contact icons in the header, drawn inline so they print crisply
+// inline icons so they print sharp
 const Ico = ({ d, fill }: { d: string; fill?: boolean }) => (
   <svg className={`r-ico${fill ? " fill" : ""}`} viewBox="0 0 24 24" aria-hidden="true"><path d={d} /></svg>
 );

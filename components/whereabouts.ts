@@ -1,4 +1,4 @@
-// shared by the check-in page and the header clock
+// used by the check in page and the header clock
 export const KEY = "whereabouts-key";
 const LAST = "whereabouts-last";
 const EVERY = 30 * 60 * 1000;
@@ -14,7 +14,7 @@ export async function checkIn(key: string, force = false): Promise<Result> {
     const res = await fetch("/api/whereabouts", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      // the browser knows its own time zone exactly; the city comes from the connection on the server
+      // time zone comes from the browser, the city comes from the server
       body: JSON.stringify({ timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }),
     });
     const data = await res.json().catch(() => ({}));

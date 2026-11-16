@@ -1,1 +1,2 @@
+/* round bullets instead of dashes */
 .r-entry li::before { content: "\2022"; }

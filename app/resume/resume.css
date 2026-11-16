@@ -1,4 +1,4 @@
-/* paper-style resume page */
+/* paper style resume */
 .r-page-wrap { min-height: 100vh; padding: 24px 16px 64px; }
 .r-bar { max-width: 8.5in; margin: 0 auto 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .r-bar a { color: var(--muted); text-decoration: none; font-size: 15px; }
@@ -53,7 +53,7 @@
   html, body { background: #fff !important; }
   .r-page-wrap { padding: 0; }
   .r-page { box-shadow: none; border-radius: 0; max-width: none; }
-  /* printing from a phone: use the paper layout, not the narrow screen one */
+  /* printing from a phone should still use the paper layout */
   .r-row { display: flex; flex-direction: row; gap: 12px; }
   .r-row > * { display: inline; }
   .r-row > :last-child { margin-top: 0; font-size: inherit; color: inherit; }

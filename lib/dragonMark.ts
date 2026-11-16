@@ -1,4 +1,4 @@
-// the AR dragon mark, drawn from geometry (512 grid)
+// my AR dragon logo, drawn from geometry on a 512 grid
 type Pt = { x: number; y: number };
 
 const f = (n: number) => (Math.round(n * 10) / 10).toString();
@@ -6,7 +6,7 @@ const pt = (p: Pt) => `${f(p.x)} ${f(p.y)}`;
 const C = { x: 256, y: 262 };
 const deg = Math.PI / 180;
 
-// ---------- Body centreline ---------- s = 0 at the neck (upper right), running anticlockwise round the top
+// body centreline
 const TH0 = -52 * deg, SWEEP = 288 * deg;
 const R = (s: number) => 150 + 5 * Math.sin(s * Math.PI * 4.2) * (0.4 + s * 0.6);
 const W = (s: number) => {
@@ -18,12 +18,12 @@ const at = (s: number) => {
   const r = R(s);
   return { x: C.x + r * Math.cos(th), y: C.y + r * Math.sin(th), th };
 };
-// tangent toward the tail and outward normal (away from the centre)
+// tangent toward the tail and the outward normal
 const frame = (s: number) => {
   const a = at(Math.max(0, s - 0.002)), b = at(Math.min(1, s + 0.002));
   const tx = b.x - a.x, ty = b.y - a.y, l = Math.hypot(tx, ty);
   const t = { x: tx / l, y: ty / l };
-  // anticlockwise travel in screen space: the left-hand normal points outward
+  // going anticlockwise on screen, so the left normal points outward
   const n = { x: t.y, y: -t.x };
   const p = at(s);
   const outward = (p.x - C.x) * n.x + (p.y - C.y) * n.y > 0 ? n : { x: -n.x, y: -n.y };
@@ -38,7 +38,7 @@ const N = 130;
 const S = Array.from({ length: N + 1 }, (_, i) => i / N);
 const edge = (k: number, from = 0, to = 1) => S.filter((s) => s >= from && s <= to).map((s) => off(s, k));
 const smooth = (pts: Pt[]) => {
-  // catmull-Rom to cubic Bézier
+  // catmull-Rom to cubic Bezier
   let d = `M${pt(pts[0])}`;
   for (let i = 0; i < pts.length - 1; i++) {
     const p0 = pts[i - 1] ?? pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] ?? p2;
@@ -49,7 +49,7 @@ const smooth = (pts: Pt[]) => {
   return d;
 };
 
-// tail blade: a barbed spade at s = 1, pointing along the tail
+// tail: barbed spade at s = 1
 const tailEnd = frame(1);
 const tip = { x: tailEnd.p.x + tailEnd.t.x * 8, y: tailEnd.p.y + tailEnd.t.y * 8 };
 const tb = (u: number, v: number): Pt => ({ x: tailEnd.p.x + tailEnd.t.x * u + tailEnd.n.x * v, y: tailEnd.p.y + tailEnd.t.y * u + tailEnd.n.y * v });
@@ -59,7 +59,7 @@ const bodyD = smooth(outer) + `L${pt(tb(2, 3))}L${pt(tip)}L${pt(tb(2, -3))}` + s
 const bladeD = `M${pt(tb(-6, 4))}C${pt(tb(4, 9))} ${pt(tb(6, 19))} ${pt(tb(2, 22))}L${pt(tb(14, 15))}C${pt(tb(22, 12))} ${pt(tb(30, 6))} ${pt(tb(42, 0))}C${pt(tb(30, -6))} ${pt(tb(22, -12))} ${pt(tb(14, -15))}L${pt(tb(2, -22))}C${pt(tb(6, -19))} ${pt(tb(4, -9))} ${pt(tb(-6, -4))}Z`;
 const bladeRib = `M${pt(tb(-2, 0))}L${pt(tb(36, 0))}M${pt(tb(10, 0))}L${pt(tb(6, 12))}M${pt(tb(10, 0))}L${pt(tb(6, -12))}M${pt(tb(20, 0))}L${pt(tb(17, 8))}M${pt(tb(20, 0))}L${pt(tb(17, -8))}`;
 
-// belly: armoured plates along the inner side
+// belly plates along the inner side
 const bellyOuter = edge(-0.42, 0, 0.97), bellyInner = edge(-0.97, 0, 0.97).reverse();
 const bellyD = smooth(bellyOuter) + smooth(bellyInner).replace(/^M/, "L") + "Z";
 let plates = "";
@@ -68,7 +68,7 @@ for (let s = 0.03; s < 0.95; s += 0.021 + s * 0.006) {
   plates += `M${pt(a)}Q${pt(m)} ${pt(b)}`;
 }
 
-// scales: overlapping arcs in staggered rows over the back, opening toward the tail
+// scales: staggered rows of arcs along the back
 let scales = "", scaleHi = "";
 let row = 0;
 for (let s = 0.015; s < 0.97; row++) {
@@ -79,7 +79,7 @@ for (let s = 0.015; s < 0.97; row++) {
     const { p, t, n } = frame(s);
     const c = { x: p.x + n.x * (w / 2) * k, y: p.y + n.y * (w / 2) * k };
     const r = Math.max(1.8, w * 0.17);
-    // arc: half-circle on the head side, endpoints across the body
+    // half circle on the head side
     const e1 = { x: c.x + n.x * r, y: c.y + n.y * r }, e2 = { x: c.x - n.x * r, y: c.y - n.y * r };
     const bulge = { x: c.x - t.x * r * 1.25, y: c.y - t.y * r * 1.25 };
     scales += `M${pt(e1)}Q${pt(bulge)} ${pt(e2)}`;
@@ -88,7 +88,7 @@ for (let s = 0.015; s < 0.97; row++) {
   s += step;
 }
 
-// dorsal spines: curved bone blades along the outer edge, raking toward the tail
+// spines along the outer edge, raked toward the tail
 let spines = "";
 for (let s = 0.16; s < 0.93; s += 0.032) {
   const { t, n } = frame(s);
@@ -102,14 +102,14 @@ for (let s = 0.16; s < 0.93; s += 0.032) {
   spines += `M${pt(b1)}Q${pt(ctl)} ${pt(tp)}Q${pt({ x: (b2.x + tp.x) / 2 + n.x * 1, y: (b2.y + tp.y) / 2 + n.y * 1 })} ${pt(b2)}Z`;
 }
 
-// sheen along the back
+// highlight along the back
 const sheenD = smooth(edge(0.62, 0.015, 0.88)) + smooth(edge(0.42, 0.015, 0.88).reverse()).replace(/^M/, "L") + "Z";
 const spineLine = smooth(edge(0.2, 0.02, 0.95));
 
-// ---------- Legs: clawed feet gripping the medallion ----------
+// legs gripping the seal
 const MED = 106;
 const leg = (s: number, flip: number) => {
-  // a foreleg reaching in from under the body; the hand grips the medallion's brass rim with four hooked talons
+  // front leg coming out from under the body, gripping the brass rim with its claws
   const c0 = at(s);
   const ang = Math.atan2(c0.y - C.y, c0.x - C.x);
   const u = { x: Math.cos(ang), y: Math.sin(ang) }, v = { x: -u.y, y: u.x };
@@ -126,7 +126,7 @@ const leg = (s: number, flip: number) => {
   let lscale = "";
   for (const r of [rin - 4, Math.min(rin - 10, 124 + d)]) lscale += `M${pt(P2(r, -6 + sh * 0.6))}Q${pt(P2(r - 5, sh * 0.6))} ${pt(P2(r, 6 + sh * 0.6))}`;
   for (const k of [-8, 0, 8]) lscale += `M${pt(P2(109 + d, k * 1.05 + sh))}L${pt(P2(105 + d, k + sh))}`;
-  // three talons, 8 apart, each hooking over the brass rim and ending on the seal's inner edge
+  // three claws, 8 apart, hooking over the rim
   let claws = "";
   for (const k of [-8, 0, 8]) {
     const b = P2(104 + d, k + sh);
@@ -142,16 +142,16 @@ const L1 = leg(0.31, -1), L2 = leg(0.67, 1);
 const neck = frame(0);
 const headAng = Math.atan2(-neck.t.y, -neck.t.x) / deg - 12;
 
-// monogram outlines (Cinzel Black 104px, centred on the seal)
+// aR outlines (Cinzel Black 104px, centred on the seal)
 const AR = "M211.8 224.4L212.7 224.4L245.9 293.2Q247.5 295.9 249.6 297.0L249.6 297.0Q252.0 298.6 254.4 298.6L254.4 298.6L255.3 298.6L255.3 299.6L215.9 299.6L215.9 298.6L216.8 298.6Q218.9 298.6 220.5 296.9Q222.1 295.2 220.7 292.1L220.7 292.1L220.8 292.1L216.8 282.4L194.5 282.4L190.3 292.1L190.4 292.1Q189.4 294.1 190.0 295.6Q190.5 297.0 191.8 297.8Q193.1 298.6 194.3 298.6L194.3 298.6L195.3 298.6L195.3 299.6L172.1 299.6L172.1 298.6L173.0 298.6Q175.4 298.6 178.0 297.0L178.0 297.0Q180.0 295.9 181.4 293.5L181.4 293.5L205.9 239.8Q206.4 238.9 207.3 236.9Q208.2 234.9 209.1 232.5Q210.1 230.1 210.9 227.9Q211.7 225.7 211.8 224.4L211.8 224.4ZM214.6 277.2L205.9 256.3L196.8 277.2L214.6 277.2ZM262.8 292.1L262.8 292.1L262.8 234.4Q262.7 231.7 260.7 229.8Q258.8 227.9 256.1 227.9L256.1 227.9L254.8 227.9L254.8 226.8L295.4 226.8Q300.1 226.8 305.0 227.7Q309.9 228.5 313.9 230.6Q318.0 232.8 320.5 236.6Q323.0 240.5 323.0 246.5L323.0 246.5Q323.0 250.5 321.5 254.7Q320.1 258.9 316.5 262.1Q312.9 265.2 306.3 266.3L306.3 266.3Q310.7 267.5 313.9 270.5Q317.2 273.5 319.0 276.7L319.0 276.7Q319.2 277.0 320.1 278.4Q320.9 279.9 322.2 282.0Q323.5 284.2 325.0 286.4Q326.4 288.7 327.9 290.7L327.9 290.7Q330.3 293.9 332.0 295.6Q333.8 297.3 335.6 297.9Q337.4 298.5 339.9 298.6L339.9 298.6L339.9 299.6L326.9 299.6Q320.7 299.6 315.4 298.9Q310.1 298.2 305.9 295.7Q301.7 293.2 298.4 287.8L298.4 287.8Q297.3 285.9 296.6 284.0Q295.8 282.2 295.3 280.4Q294.8 278.6 294.4 277.0Q294.1 275.4 293.8 273.9Q293.4 272.4 293.0 271.0L293.0 271.0Q292.0 267.3 290.5 266.0Q289.1 264.6 287.6 264.1L287.6 264.1L287.6 263.0L289.3 263.0Q292.2 263.0 294.5 261.7Q296.8 260.3 298.3 257.5Q299.9 254.7 300.4 250.2L300.4 250.2Q300.5 249.4 300.6 248.4Q300.7 247.4 300.6 246.0L300.6 246.0Q300.2 238.3 296.8 235.3Q293.4 232.3 288.8 232.3L288.8 232.3L284.2 232.3L284.2 292.1Q284.2 294.8 286.2 296.7Q288.1 298.6 290.8 298.6L290.8 298.6L292.1 298.6L292.1 299.6L254.8 299.6L254.8 298.6L256.1 298.6Q258.8 298.6 260.7 296.7Q262.7 294.8 262.8 292.1Z";
 
-// ---------- Medallion engraving ----------
+// seal engraving
 let medTicks = "";
 for (let k = 0; k < 72; k++) {
   const a = (k / 72) * Math.PI * 2, r1 = MED - 9, r2 = k % 6 ? MED - 12.5 : MED - 15;
   medTicks += `M${f(C.x + Math.cos(a) * r1)} ${f(C.y + Math.sin(a) * r1)}L${f(C.x + Math.cos(a) * r2)} ${f(C.y + Math.sin(a) * r2)}`;
 }
-// faint astrolabe rings on the field
+// faint rings on the background
 let fieldTicks = "";
 for (let k = 0; k < 120; k++) {
   const a = (k / 120) * Math.PI * 2, r1 = 214, r2 = k % 10 ? 208 : 200;
@@ -254,7 +254,7 @@ ${rivet(62, 62)}${rivet(450, 62)}${rivet(62, 450)}${rivet(450, 450)}
 </svg>`;
 }
 
-// bold version of the same mark for small sizes (header logo, browser tab, email): a thick body
+// bold version for small sizes (header logo, tab icon, email): thicker body, fewer bigger spines
 export function dragonMarkSmall(P: string, FLAME: boolean): string {
   const C = { x: 256, y: 270 };
   const TH0 = -66 * deg, SWEEP = 282 * deg, RR = 152;

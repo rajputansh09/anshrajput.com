@@ -1,4 +1,4 @@
-// older iOS versions ask for this name instead of apple-touch-icon.png; it is the same icon
+// older iOS asks for this name instead
 import { ImageResponse } from "next/og";
 import { dragonMark } from "../../lib/dragonMark";
 

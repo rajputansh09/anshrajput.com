@@ -1,4 +1,4 @@
-// data for the skill astrolabe on the home page
+// data for the skills astrolabe
 
 export type Seal = { id: string; mono: string; name: string; line: string; href: string };
 export type Skill = { name: string; short?: string; uses: string[]; note?: string };

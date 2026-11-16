@@ -1,4 +1,4 @@
-// colours for the two dragons
+// dragon colours
 export type Pal = {
   name: string;
   body: [string, string, string, string];

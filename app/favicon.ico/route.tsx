@@ -1,4 +1,4 @@
-// /favicon.ico: browsers and search engines ask for it by name even when the page names an SVG icon
+// browsers still request /favicon.ico by name, so serve the crest here too (PNG works everywhere)
 import { ImageResponse } from "next/og";
 import { dragonMark } from "../../lib/dragonMark";
 

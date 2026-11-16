@@ -1,4 +1,4 @@
-// sound effects for the arcade, synthesised with the Web Audio API: no audio files to download
+// arcade sound effects, all synthesised with Web Audio, no audio files
 
 type Tone = { f0: number; f1: number; dur: number; type?: OscillatorType; vol?: number; at?: number };
 type Noise = { dur: number; f0: number; f1?: number; q?: number; filter?: BiquadFilterType; vol?: number; at?: number };
@@ -52,7 +52,7 @@ const last: Record<string, number> = {};
 function load() {
   if (loaded || typeof window === "undefined") return;
   loaded = true;
-  try { muted = localStorage.getItem(MUTE_KEY) === "1"; } catch { /* storage blocked: default to sound on */ }
+  try { muted = localStorage.getItem(MUTE_KEY) === "1"; } catch { /* storage blocked, sound on */ }
 }
 
 export const sfx = {
@@ -60,10 +60,10 @@ export const sfx = {
   setMuted(m: boolean) {
     load();
     muted = m;
-    try { localStorage.setItem(MUTE_KEY, m ? "1" : "0"); } catch { /* not saved, still applied */ }
+    try { localStorage.setItem(MUTE_KEY, m ? "1" : "0"); } catch { /* not saved but still applied */ }
     if (out && ctx) out.gain.setTargetAtTime(m ? 0 : VOLUME, ctx.currentTime, 0.02);
   },
-  // called from a click, tap or key press, so the browser lets audio start
+  // call this from a click, tap or key press so the browser allows audio
   unlock() {
     load();
     if (typeof window === "undefined") return;
@@ -71,13 +71,13 @@ export const sfx = {
       if (!ctx) {
         const AC = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
         if (!AC) return;
-        // iPhone: "playback" makes game sound play even with the ring/silent switch on silent (iOS 17 and later)
+        // iPhone: "playback" lets game sound play even with the silent switch on (iOS 17+)
         const session = (navigator as unknown as { audioSession?: { type: string } }).audioSession;
         if (session) { try { session.type = "playback"; } catch { /* older Safari */ } }
         ctx = new AC({ latencyHint: "interactive" });
         out = ctx.createGain();
         out.gain.value = muted ? 0 : VOLUME;
-        // a gentle compressor keeps explosions from clipping when several land together
+        // light compressor so stacked explosions don't clip
         const comp = ctx.createDynamicsCompressor();
         comp.threshold.value = -10; comp.ratio.value = 3; comp.knee.value = 10;
         out.connect(comp).connect(ctx.destination);
@@ -97,7 +97,7 @@ export const sfx = {
       ctx = null;
     }
   },
-  // wakes audio on the first (and every later) real interaction anywhere on the page
+  // resume audio on the first real interaction anywhere on the page
   listen() {
     if (listening || typeof window === "undefined") return;
     listening = true;
@@ -109,7 +109,7 @@ export const sfx = {
   play(name: keyof typeof RECIPES | string, vol = 1) {
     if (!ctx || !out || muted) return;
     if (ctx.state !== "running") {
-      // Safari wakes audio asynchronously: play the sound as soon as it is up, unless that takes too long to matter
+      // Safari resumes audio async, so play once it's ready unless that takes too long
       const asked = performance.now();
       void ctx.resume().then(() => { if (ctx?.state === "running" && performance.now() - asked < 300) sfx.play(name, vol); }).catch(() => {});
       return;
@@ -145,7 +145,7 @@ export const sfx = {
         s.start(at, Math.random() * 0.5); s.stop(at + n.dur + 0.02);
       }
     } catch {
-      // a failed sound never interrupts the game
+      // a broken sound should never stop the game
     }
   },
 };

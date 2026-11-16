@@ -1,4 +1,4 @@
-// Crypt Raider, rebuilt for the browser from the Unreal C++ (UGrabber, UMover, UTrigger_Component)
+// Crypt Raider, top down, based on my Unreal C++ (UGrabber, UMover, UTrigger_Component)
 import { C, Fx, W, H, banner, box, circleOut, clamp, fmt, inRect, label, painted, seeded, vignette, type Game, type Input, type Rect, type State, type V } from "./core";
 import { sfx } from "./sfx";
 
@@ -59,7 +59,7 @@ export const LEVELS: Level[] = [
   },
 ];
 
-// flagstones, cracks, moss and bones, painted once per crypt; walls are brick with a lit top edge
+// floor (flagstones, cracks, moss, bones) painted once per crypt
 const floors: (HTMLCanvasElement | null)[] = [];
 function floor(lv: number) {
   if (floors[lv] !== undefined) return floors[lv];
@@ -72,7 +72,7 @@ function floor(lv: number) {
       if (r() < 0.25) { c.strokeStyle = "rgba(0,0,0,0.45)"; c.lineWidth = 1; c.beginPath(); c.moveTo(x + r() * 38, y + 2); c.lineTo(x + 10 + r() * 20, y + 20); c.lineTo(x + r() * 38, y + 38); c.stroke(); }
       if (r() < 0.12) { c.fillStyle = "rgba(70,110,60,0.25)"; c.beginPath(); c.arc(x + r() * 38, y + r() * 38, 4 + r() * 8, 0, Math.PI * 2); c.fill(); }
     }
-    // scattered bones
+    // bones
     c.strokeStyle = "rgba(210,200,180,0.25)"; c.lineWidth = 2.5; c.lineCap = "round";
     for (let k = 0; k < 18; k++) { const x = 40 + r() * (W - 80), y = 40 + r() * (H - 80), a = r() * 3; c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.cos(a) * 12, y + Math.sin(a) * 12); c.stroke(); }
     for (const wl of L.walls) {
@@ -125,7 +125,7 @@ export class Crypt implements Game {
   solids(): Rect[] { return [...this.L.walls, ...this.gates]; }
   step(dt: number, inp: Input) {
     this.fx.step(dt);
-    // uMover: each gate moves toward its offset (or back) at constant speed
+    // uMover: gates slide to their offset (or back) at constant speed
     for (const g of this.gates) {
       const ty = g.should ? g.oy + g.offY : g.oy, sp = (Math.abs(g.offY) / MOVE_TIME) * dt;
       const before = g.y;
@@ -137,7 +137,7 @@ export class Crypt implements Game {
     }
     if (this.state !== "play") return;
     this.t += dt;
-    // spikes snap up: a metallic hiss if you are near
+    // spikes come up, with a hiss if you're close
     this.L.spikes.forEach((s, k) => {
       const up = this.spikeUp(s);
       if (up && !this.wasUp[k] && inRect(this.p.x, this.p.y, s, 160)) sfx.play("spike");
@@ -155,22 +155,22 @@ export class Crypt implements Game {
     const step = Math.hypot(pos.x - p.x, pos.y - p.y);
     p.walk += step;
     p.x = pos.x; p.y = pos.y;
-    // facing: toward the pointer when there is one, the aim stick on touch, otherwise the way you walk
+    // face the pointer, or the aim stick on touch, otherwise the way you're walking
     if (inp.aimed) { const d = Math.hypot(inp.aimX - p.x, inp.aimY - p.y); if (d > 4) { p.fx = (inp.aimX - p.x) / d; p.fy = (inp.aimY - p.y) / d; } }
     else if (Math.hypot(inp.bx, inp.by) > 0.35) { const d = Math.hypot(inp.bx, inp.by); p.fx = inp.bx / d; p.fy = inp.by / d; }
     else if (m > 0.2) { p.fx = ax / Math.hypot(ax, ay); p.fy = ay / Math.hypot(ax, ay); }
-    // grab on press, release on let go
+    // grab on press, drop on release
     if (inp.fire && !this.held) this.grab();
     if (!inp.fire && this.held) this.release();
     if (this.held) {
-      // the physics handle pulls the item toward the hold point, but walls stop it
+      // physics handle pulls the item to the hold point but walls block it
       const it = this.held, tx = p.x + p.fx * HOLD, ty = p.y + p.fy * HOLD;
       const q = { x: it.x + (tx - it.x) * Math.min(1, dt * 14), y: it.y + (ty - it.y) * Math.min(1, dt * 14) };
       for (const r of this.solids()) circleOut(q, it.r, r);
       it.x = q.x; it.y = q.y;
       if (Math.hypot(it.x - p.x, it.y - p.y) > HOLD + 50) this.release();
     }
-    // uTrigger_Component: a plate takes an acceptable item that is not being held
+    // uTrigger_Component: plate takes a matching item that isn't being held
     for (const pl of this.plates) {
       if (pl.item && (pl.item.held || !inRect(pl.item.x, pl.item.y, pl))) { pl.item.on = null; pl.item = null; }
       if (!pl.item) {
@@ -190,7 +190,7 @@ export class Crypt implements Game {
       if (this.spikeUp(s) && inRect(p.x, p.y, s, -4)) { this.die(); return; }
     }
     if (!inSpikes) { this.safe.x = p.x; this.safe.y = p.y; }
-    // out with the golden statue
+    // escape with the statue
     const statue = this.items.find((i) => i.tag === "statue")!;
     if (inRect(statue.x, statue.y, this.L.exit) && inRect(p.x, p.y, this.L.exit, 30)) {
       this.state = "won";
@@ -199,7 +199,7 @@ export class Crypt implements Game {
     }
   }
   grab() {
-    // sweepSingleByChannel: a sphere of GrabRadius from you out to MaxGrabDistance
+    // sweepSingleByChannel: sphere of GrabRadius out to MaxGrabDistance, closest grabbable thing it hits
     const p = this.p;
     let best: Item | null = null, bestT = Infinity;
     for (const it of this.items) {
@@ -222,7 +222,7 @@ export class Crypt implements Game {
     sfx.play("die");
   }
   respawn() {
-    // back where you last stood clear of the spikes
+    // respawn where you last stood safely
     this.p.x = this.safe.x; this.p.y = this.safe.y;
     this.fx.burst(this.p.x, this.p.y, C.moss, 14, 120, 0, 2);
   }
@@ -232,9 +232,9 @@ export class Crypt implements Game {
     const f = floor(this.level);
     if (f) c.drawImage(f, 0, 0); else { c.fillStyle = "#16191a"; c.fillRect(-20, -20, W + 40, H + 40); }
     this.fx.drawUnder(c);
-    // spikes, with a warning glow in the moment before they rise
+    // spikes, with a warning glow just before they rise
     for (const s of L.spikes) {
-      // game time (this.t), the same clock the collision check uses, so what you see is what hurts
+      // uses game time (this.t), same clock as the collision check, so what you see is what hurts
       const ph = (this.t + s.ph) % s.cycle, up = ph < s.cycle / 2, warn = !up && ph > s.cycle - 0.45;
       c.fillStyle = up ? "rgba(240,140,122,0.16)" : warn ? `rgba(240,140,122,${0.06 + Math.sin(t * 40) * 0.04})` : "rgba(0,0,0,0.28)";
       c.fillRect(s.x, s.y, s.w, s.h);
@@ -261,21 +261,21 @@ export class Crypt implements Game {
       if (on) { c.fillStyle = `rgba(240,215,154,${0.12 + Math.sin(t * 4) * 0.05})`; box(c, pl.x - 4, pl.y - 4, pl.w + 8, pl.h + 8, 10); c.fill(); }
       if (!on) this.icon(c, pl.tag, pl.x + pl.w / 2, pl.y + pl.h / 2, 0.55, true);
     }
-    // gates: iron portcullis bars
+    // gates (iron bars)
     for (const g of this.gates) {
       c.fillStyle = "rgba(0,0,0,0.35)"; c.fillRect(g.x + 6, g.y + 4, g.w - 6, g.h);
       c.fillStyle = "#4b3d2a"; c.fillRect(g.x + 2, g.y, g.w - 4, g.h);
       c.fillStyle = "#7a6444"; for (let y = g.y + 6; y < g.y + g.h; y += 14) c.fillRect(g.x + 2, y, g.w - 4, 3);
       c.fillStyle = "#2b2219"; for (let x = g.x + 6; x < g.x + g.w - 2; x += 7) c.fillRect(x, g.y, 2, g.h);
     }
-    // walls on top (they hide gates that have slid away)
+    // walls on top, they hide gates that slid away
     for (const wl of L.walls) { c.fillStyle = "#2d3230"; c.fillRect(wl.x, wl.y, wl.w, wl.h); c.fillStyle = "#454d49"; c.fillRect(wl.x, wl.y, wl.w, Math.min(5, wl.h)); }
     // items
     for (const it of this.items) {
       c.fillStyle = "rgba(0,0,0,0.4)"; c.beginPath(); c.ellipse(it.x + 3, it.y + 6, it.r, it.r * 0.75, 0, 0, Math.PI * 2); c.fill();
       this.icon(c, it.tag, it.x, it.y, 1, false, t);
     }
-    // player and the grab beam
+    // player and grab beam
     const p = this.p;
     if (this.dead <= 0) {
       if (this.held) {
@@ -285,7 +285,7 @@ export class Crypt implements Game {
         c.restore();
       }
       c.fillStyle = "rgba(0,0,0,0.4)"; c.beginPath(); c.ellipse(p.x + 3, p.y + 6, PR, PR * 0.8, 0, 0, Math.PI * 2); c.fill();
-      // cloak, then the head, facing forward; feet step as you walk
+      // cloak and head, feet step while walking
       const a = Math.atan2(p.fy, p.fx), s = Math.sin(p.walk * 0.14) * 4;
       c.save(); c.translate(p.x, p.y); c.rotate(a);
       c.fillStyle = "#2a2f2c"; c.beginPath(); c.ellipse(-3 + s * 0.2, -9, 5, 4, 0, 0, Math.PI * 2); c.ellipse(-3 - s * 0.2, 9, 5, 4, 0, 0, Math.PI * 2); c.fill();
@@ -296,7 +296,7 @@ export class Crypt implements Game {
     }
     this.fx.draw(c);
     c.restore();
-    // torchlight: the crypt is dark except around you, the statue, the torches and the exit
+    // torchlight: dark everywhere except around you, the statue, the torches and the exit
     if (typeof document !== "undefined") {
       if (!this.mask) { this.mask = document.createElement("canvas"); this.mask.width = W; this.mask.height = H; }
       const m = this.mask.getContext("2d")!;
@@ -315,7 +315,7 @@ export class Crypt implements Game {
       hole(L.exit.x + L.exit.w / 2, L.exit.y + L.exit.h / 2, 90, 0.6);
       for (const pl of this.plates) if (pl.item) hole(pl.x + pl.w / 2, pl.y + pl.h / 2, 60, 0.5);
       c.drawImage(this.mask, 0, 0);
-      // warm light over the darkness, then the flames
+      // warm light over the dark, then the flames
       c.save(); c.globalCompositeOperation = "lighter";
       for (const [x, y] of L.torches) {
         const g = c.createRadialGradient(x, y, 0, x, y, 80);
@@ -328,14 +328,14 @@ export class Crypt implements Game {
       const g = c.createRadialGradient(p.x, p.y, 0, p.x, p.y, L.light * 0.6);
       g.addColorStop(0, "rgba(255,170,90,0.08)"); g.addColorStop(1, "rgba(255,170,90,0)");
       c.fillStyle = g; c.fillRect(p.x - L.light, p.y - L.light, L.light * 2, L.light * 2);
-      // the statue glints
+      // statue glint
       if ((t * 0.7) % 1 < 0.12) { c.fillStyle = "rgba(255,250,220,0.9)"; c.beginPath(); c.arc(s.x - 5, s.y - 6, 2.5, 0, Math.PI * 2); c.fill(); }
       c.restore();
     }
     vignette(c, 0.4);
     if (this.t > 0 && this.t < 2.6 && this.state === "play") banner(c, `Level ${this.level + 1}: ${L.name}`, L.sub, Math.min(1, 2.6 - this.t));
   }
-  // the four relics, drawn from simple shapes
+  // the four relics
   icon(c: CanvasRenderingContext2D, tag: Tag, x: number, y: number, k: number, ghost: boolean, t = 0) {
     c.save(); c.translate(x, y); c.scale(k, k);
     if (ghost) c.globalAlpha = 0.45;

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { checkIn, KEY } from "../../components/whereabouts";
 
+// only needed once per browser
 export default function CheckIn() {
   const [key, setKey] = useState("");
   const [saved, setSaved] = useState(false);

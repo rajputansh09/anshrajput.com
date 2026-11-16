@@ -1,4 +1,4 @@
-// the site icon at any size, drawn from the crest (lib/dragonMark.ts)
+// site icon at any size, drawn from the crest
 import { ImageResponse } from "next/og";
 import { dragonMark } from "./dragonMark";
 
@@ -6,7 +6,7 @@ export const iconHeaders = { "Cache-Control": "public, max-age=0, must-revalidat
 
 const uri = (svg: string) => `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
 
-// fill: a solid background behind the rounded corners (iOS home screens show transparent corners as black)
+// fill: solid background behind the corners, iOS shows transparent corners as black
 export function crestPng(size: number, fill = false) {
   return new ImageResponse(
     (

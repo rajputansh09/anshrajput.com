@@ -1,4 +1,4 @@
-// the frame for the plain pages (privacy, not found, errors): the mark linking home, the page
+// layout for the simple pages (privacy, 404, errors)
 import Logo from "./Logo";
 import { Year } from "./Extras";
 

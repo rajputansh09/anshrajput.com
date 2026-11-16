@@ -1,5 +1,5 @@
 "use client";
-// the skill astrolabe: a carved bronze-and-stone instrument
+// skills astrolabe
 import { useEffect, useMemo, useRef, useState } from "react";
 import { rings, seals } from "../lib/skills";
 import { dragonBus } from "./dragonBus";
@@ -61,7 +61,7 @@ const bez = (p: { x: number; y: number }, c: { x: number; y: number }, q: { x: n
   return { x: v * v * p.x + 2 * v * u * c.x + u * u * q.x, y: v * v * p.y + 2 * v * u * c.y + u * u * q.y };
 };
 
-// soft round sprites for the fire, one per colour, drawn once
+// soft round fire sprites, one per colour, drawn once
 const makeSprite = (hex: string) => {
   const c = document.createElement("canvas");
   c.width = c.height = 64;
@@ -108,7 +108,7 @@ export default function Astrolabe() {
   const inscriptionEl = useRef<HTMLDivElement>(null);
   const dwell = useRef<number | null>(null);
 
-  // mutable state shared with the animation loop
+  // mutable state the animation loop uses
   const sim = useRef({
     ang: [0.2, 1.1, 0.5, 2.0],
     vel: [0, 0, 0, 0],
@@ -120,13 +120,13 @@ export default function Astrolabe() {
     pointer: null as null | { x: number; y: number },
     fires: new Map<string, Fire>(),
     sparks: [] as Spark[],
-    bursts: [] as string[], // rune ids that just woke, to burst on the next frame
-    queue: [] as { id: string; at: number }[], // staggered wake-ups ("Wake all")
+    bursts: [] as string[], // runes that just woke, burst next frame
+    queue: [] as { id: string; at: number }[], // staggered wake ups for Wake all
     finaleAt: -1,
     lastBreath: -1e9,
-    goto: [null, null, null, null] as (number | null)[], // target angles when a ring is spun to a rune
+    goto: [null, null, null, null] as (number | null)[], // target angles when spinning a ring to a rune
     ringFlare: [] as { ring: number; at: number }[],
-    low: false, // adaptive quality for slow devices
+    low: false, // lower quality on slow devices
   });
   const awakeRef = useRef(awake);
   awakeRef.current = awake;
@@ -146,7 +146,7 @@ export default function Astrolabe() {
   const wakeRef = useRef(wake);
   wakeRef.current = wake;
 
-  // restore woken runes for returning visitors, and save as they change
+  // remember woken runes for returning visitors
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(STORE) || "[]") as string[];
@@ -166,7 +166,7 @@ export default function Astrolabe() {
     } catch {}
   }, [awake, loaded]);
 
-  // a ring fully awake: sparks race round it, its band takes its colour, and a chord plays
+  // a whole ring awake: sparks race around it, it takes its colour and a chord plays
   const doneRings = useMemo(() => rings.map((_, i) => nodes.every((n) => n.ring !== i || awake.has(n.id))), [awake]);
   const prevDone = useRef<boolean[]>([false, false, false, false]);
   useEffect(() => {
@@ -184,7 +184,7 @@ export default function Astrolabe() {
     prevDone.current = doneRings;
   }, [doneRings, loaded]);
 
-  // finale: every rune awake
+  // finale, every rune awake
   useEffect(() => {
     if (!complete || !userWoke.current) return;
     userWoke.current = false;
@@ -247,7 +247,7 @@ export default function Astrolabe() {
     }
   };
 
-  // animation, fire and input, only while the astrolabe is on screen
+  // animation, fire and input, only while it's on screen
   useEffect(() => {
     if (view !== "astro") return;
     const svg = svgRef.current;
@@ -265,10 +265,10 @@ export default function Astrolabe() {
     let cw = 0, ch = 0, scale = 1, drewSparks = false, kNow = 1.3;
     const placed = new Map<string, string>();
     const widths = new Map<string, number>();
-    // re-measure label widths once the web fonts arrive (fallback fonts are narrower)
+    // measure labels again once the web fonts load (fallback fonts are narrower)
     document.fonts?.ready.then(() => widths.clear()).catch(() => {});
 
-    // labels sit below their gem, flip above if that would overlap another label or gem, and hide if neither fits
+    // labels go below their gem, flip above if that overlaps something, and hide if neither fits
     const placeLabels = () => {
       const L = live.current;
       const font = 16 * kNow;
@@ -284,7 +284,7 @@ export default function Astrolabe() {
       boxes.push({ x: 0, y: 0, w: 148, h: 148 });
       const rank = (n: Node) => (L.litSkills.has(n.id) ? 0 : awakeRef.current.has(n.id) ? 1 : 2);
       const order = [...visible].sort((a, b) => rank(a) - rank(b));
-      // a label may touch its own gem's box (it sits right beside it) but nothing else
+      // a label can touch its own gem but nothing else
       const hits = (b: { x: number; y: number; w: number; h: number }, self: string) =>
         boxes.some((o) => o.id !== self && Math.abs(o.x - b.x) * 2 < o.w + b.w && Math.abs(o.y - b.y) * 2 < o.h + b.h);
       for (const n of order) {
@@ -294,7 +294,7 @@ export default function Astrolabe() {
         const shown = !L.compact || L.litSkills.has(n.id);
         let where = "x";
         if (shown) {
-          // real text width (measured once per size), so the boxes match what is drawn
+          // real text width, measured once per size
           let wl = widths.get(n.id);
           if (!wl) {
             try {
@@ -319,12 +319,12 @@ export default function Astrolabe() {
             ["ar", dg, -off * 0.85],
             ["al", -dg, -off * 0.85],
           ];
-          // keep the current spot while it still fits, so labels don't flicker between positions
+          // keep the current spot if it still fits so labels don't jump around
           const cur = (placed.get(n.id) ?? "").split(":")[0];
           cands.sort((a, b) => (a[0] === cur ? -1 : b[0] === cur ? 1 : 0));
           for (const [k, dx, dy] of cands) {
             const box = { x: p.x + dx, y: p.y + dy, w, h: hh };
-            // stay inside the instrument's square, so no label is clipped at the screen edge or pokes into the card
+            // stay inside the instrument so labels don't get cut off or poke into the card
             const inside = Math.abs(box.x) + box.w / 2 <= VB - 10 && Math.abs(box.y) + box.h / 2 <= VB - 10;
             if (inside && !hits(box, n.id)) {
               where = k;
@@ -370,7 +370,7 @@ export default function Astrolabe() {
       const act = L.active;
       const actRing = act?.kind === "skill" ? byId.get(act.id)?.ring ?? -1 : -1;
 
-      // rings turn; the ring under inspection slows to a stop
+      // rings turn, the one you're inspecting slows to a stop
       for (let i = 0; i < 4; i++) {
         const target = L.still || reduce || i === actRing ? 0 : SPEED[i];
         s.spd[i] += (target - s.spd[i]) * Math.min(1, dt * 3);
@@ -410,7 +410,7 @@ export default function Astrolabe() {
       if (frameNo % 240 === 0) widths.clear();
       if (frameNo++ % (s.low ? 6 : 3) === 0) placeLabels();
 
-      // light sweeps along the bands: all four on arrival, then one ring at a time
+      // light sweeps along the bands, all four at first and then one ring at a time
       {
         let u = -1, mask = "";
         const intro = (t - s.t0 - 900) / 1900;
@@ -434,7 +434,7 @@ export default function Astrolabe() {
         }
       }
 
-      // staggered wake-ups
+      // staggered wake ups
       if (s.queue.length) {
         const due = s.queue.filter((q) => q.at <= t).map((q) => q.id);
         if (due.length) {
@@ -460,14 +460,14 @@ export default function Astrolabe() {
           s.ringFlare.splice(f, 1);
           continue;
         }
-        // two comets of sparks race round the completed ring
+        // two comets of sparks race around the finished ring
         for (const side of [0, Math.PI]) {
           const a = side + ft * Math.PI * 2.2;
           spawn(RADII[rf.ring] * Math.cos(a), RADII[rf.ring] * Math.sin(a), 3, 70, 2 + rf.ring, 18, 0.6);
         }
       }
 
-      // fire channels: the flame front runs rune to seal (a skill) or seal to rune (a project)
+      // fire runs rune to seal (a skill) or seal to rune (a project)
       const keys = new Set(L.threads.map((th) => th.key));
       for (const k of s.fires.keys()) if (!keys.has(k)) s.fires.delete(k);
       const arrivals: string[] = [];
@@ -481,7 +481,7 @@ export default function Astrolabe() {
         const prog = reduce ? 1 : Math.min(1, (t - f.start) / 620);
         const el = threadEls.current.get(th.key);
         if (el) {
-          // absolute dash lengths (not pathLength), which Safari has handled inconsistently
+          // absolute dash lengths instead of pathLength, Safari is inconsistent with it
           let len = 0, prev = p;
           for (let j = 1; j <= 10; j++) {
             const b = bez(p, c, q, j / 10);
@@ -513,7 +513,7 @@ export default function Astrolabe() {
         const q = sealPos.get(id);
         if (q && Math.random() < 0.6 && !reduce) s.sparks.push({ x: q.x + (Math.random() - 0.5) * 30, y: q.y - 10, vx: (Math.random() - 0.5) * 10, vy: -40 - Math.random() * 40, life: 0.7, max: 0.7, size: 16, sprite: Math.random() < 0.5 ? 0 : 1 });
       }
-      // finale: rings of fire sweep outward from the eye
+      // finale: rings of fire spreading out from the eye
       if (s.finaleAt > 0) {
         const ft = (t - s.finaleAt) / 1000;
         if (ft < 2.4) {
@@ -531,7 +531,7 @@ export default function Astrolabe() {
         } else s.finaleAt = -1;
       }
 
-      // draw the sparks
+      // sparks
       if (ctx && (s.sparks.length || drewSparks)) {
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, cw, ch);
@@ -557,7 +557,7 @@ export default function Astrolabe() {
         drewSparks = s.sparks.length > 0;
       }
 
-      // the eye follows whatever is lit, or the pointer
+      // eye follows whatever's lit, or the pointer
       let tx = 0, ty = 0;
       const tgt = act ? (act.kind === "skill" ? s.pos.get(act.id) : sealPos.get(act.id)) : s.pointer;
       if (tgt) {
@@ -577,7 +577,7 @@ export default function Astrolabe() {
         pu.setAttribute("rx", s.look.rx.toFixed(2));
       }
 
-      // ask the dragon to guard the rim while the astrolabe is centred on screen
+      // have the dragon guard the rim while the astrolabe is in the middle of the screen
       const rect = svg.getBoundingClientRect();
       const cy = rect.top + rect.height / 2;
       dragonBus.guard =
@@ -607,7 +607,7 @@ export default function Astrolabe() {
       { threshold: [0, 0.3, 0.6] },
     );
     io.observe(stage);
-    // while any part of the section fills the middle of the screen, tuck the dragon's button rail away (phones)
+    // hide the dragon rail on phones while this section is in the middle of the screen
     const root = stage.closest(".astro");
     const near = new IntersectionObserver(([en]) => document.documentElement.classList.toggle("astro-near", en.isIntersecting), {
       rootMargin: "-30% 0px -30% 0px",
@@ -616,7 +616,7 @@ export default function Astrolabe() {
     const onVis = () => (document.hidden ? stop() : visible && start());
     document.addEventListener("visibilitychange", onVis);
 
-    // size the fire canvas to the stage, and scale runes up on small screens so they stay readable
+    // size the fire canvas to the stage and make runes bigger on small screens
     const ro = new ResizeObserver(() => {
       const w = svg.getBoundingClientRect().width || 600;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -626,14 +626,14 @@ export default function Astrolabe() {
       widths.clear();
       kNow = Math.max(1, ((VB * 2) / w) * (w < 560 ? 0.7 : 0.9));
       svg.style.setProperty("--k", kNow.toFixed(3));
-      // hit areas: as big as possible without reaching into the next ring (rings are 75 units apart)
+      // hit areas as big as possible without reaching the next ring (rings are 75 apart)
       const hitR = Math.max(20, 36 / kNow).toFixed(1);
       svg.querySelectorAll(".rune-hit").forEach((c) => c.setAttribute("r", hitR));
       setCompact(w < 560);
     });
     ro.observe(svg);
 
-    // turning a ring and picking things
+    // turning rings and picking things
     type Cand = { ring: number; id: string | null; kind: string | null; x0: number; y0: number; claimed: boolean; moved: boolean; last: number; lt: number; v: number; touch: boolean };
     let cand: Cand | null = null;
     const toSvg = (cx: number, cy: number) => {
@@ -670,7 +670,7 @@ export default function Astrolabe() {
       s.ang[cand.ring] += da;
       s.goto[cand.ring] = null;
       cand.v = cand.v * 0.6 + (da / Math.max(0.008, (now - cand.lt) / 1000)) * 0.4;
-      // friction sparks where the ring is grabbed, and a ratchet click every few degrees
+      // sparks where you grab the ring and a ratchet click every few degrees
       const sp = Math.abs(cand.v);
       if (sp > 1.2) spawn(p.x, p.y, Math.min(6, Math.round(sp)), 90 + sp * 30, Math.random() < 0.5 ? 0 : 1, 10, 0.4);
       tickAcc += Math.abs(da);
@@ -743,7 +743,7 @@ export default function Astrolabe() {
       const t = e.touches[0];
       drag(t.clientX, t.clientY);
       if (cand?.claimed && e.cancelable) e.preventDefault();
-      // a vertical swipe belongs to the page: drop it so lifting the finger isn't treated as a tap
+      // vertical swipe is a scroll, so don't treat lifting the finger as a tap
       if (cand && cand.moved && !cand.claimed) cand = null;
     };
     const tEnd = (e: TouchEvent) => {
@@ -785,7 +785,7 @@ export default function Astrolabe() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
 
-  // choosing a rune or seal: lock it, wake it, and have the dragon breathe on it
+  // picking a rune or seal: lock it, wake it and have the dragon breathe on it
   const pick = (sel: NonNullable<Sel>) => {
     setLocked((cur) => (cur && cur.id === sel.id && cur.kind === sel.kind ? null : sel));
     if (sel.kind === "skill") wakeRef.current([sel.id]);
@@ -793,7 +793,7 @@ export default function Astrolabe() {
     breatheAt(sel);
   };
 
-  // spin a rune's ring so the rune comes to the top, then pick it
+  // spin the ring so the rune ends up on top, then pick it
   const bringToTop = (id: string) => {
     const n = byId.get(id);
     if (!n) return;
@@ -810,7 +810,7 @@ export default function Astrolabe() {
     }, 650);
   };
 
-  // the dragon's eye points you to a sleeping rune; once all are awake it calls for another victory lap
+  // the eye points you to a sleeping rune
   const oracle = () => {
     const sleeping = nodes.filter((n) => !awakeRef.current.has(n.id));
     if (!sleeping.length) {
@@ -825,7 +825,7 @@ export default function Astrolabe() {
   const oracleRef = useRef(oracle);
   oracleRef.current = oracle;
 
-  // best matches first: exact name, then names starting with the query, then any word starting with it
+  // best matches first: exact name, then starts with, then any word starts with, then anywhere
   const matches = (() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
@@ -931,7 +931,7 @@ export default function Astrolabe() {
       {view === "astro" && (
         <div className={`astro-stage${complete ? " is-complete" : ""}`} ref={stageRef}>
           <div className="astro-disc" aria-hidden="true" />
-          {/* static layer: rim and bronze bands */}
+          {/* static layer: rim and bands, painted once */}
           <svg className="astro-layer" viewBox={`${-VB} ${-VB} ${VB * 2} ${VB * 2}`} aria-hidden="true">
             <defs>
               <linearGradient id="astro-bronze" x1="0" y1="0" x2="1" y2="1">
@@ -973,7 +973,7 @@ export default function Astrolabe() {
 
           <div className="astro-torch" aria-hidden="true" />
 
-          {/* turning layers, rotated by the compositor without repainting */}
+          {/* rotating layers, clipped to the disc so their corners don't widen the page */}
           <div className="astro-spins">
           <div ref={inscriptionEl} className="astro-spin" style={{ inset: 0 }} aria-hidden="true">
             <svg viewBox={`${-VB} ${-VB} ${VB * 2} ${VB * 2}`}>
@@ -1030,7 +1030,7 @@ export default function Astrolabe() {
 
           </div>
 
-          {/* live layer: runes, seals, fire channels and the eye */}
+          {/* live layer: runes, seals, fire and the eye */}
           <svg
             ref={svgRef}
             className={`astro-svg${active ? " has-active" : ""}${blaze ? " blaze" : ""}${compact ? " compact" : ""}${complete ? " complete" : ""}${seen ? " seen" : ""}`}
@@ -1214,7 +1214,7 @@ export default function Astrolabe() {
         </div>
       )}
 
-      {/* on phones the rings are too tight for every name, so the chosen ring's runes are listed here instead */}
+      {/* on phones there's no room for every name, so the selected ring's runes are listed here */}
       {view === "astro" && compact && (
         <div className="astro-strip">
           <div className="astro-tabs" role="tablist" aria-label="Rings">
@@ -1404,7 +1404,7 @@ export default function Astrolabe() {
         </div>
       </div>
 
-      {/* the same content as plain text: the scroll view, and what search engines and screen readers read */}
+      {/* same content as plain text, for the scroll view, search engines and screen readers */}
       <div className={view === "scroll" ? "astro-scroll" : "sr-only"}>
         {rings.map((r, i) => (
           <section key={r.name} className={hidden.includes(i) && view === "scroll" ? "gone" : ""} style={{ ["--hue" as string]: r.hue }}>

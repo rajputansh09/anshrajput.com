@@ -2,7 +2,7 @@
 // the two games behind the Trials button
 import type { Float, GameKind, GameState, Lantern, LanternKind, P, Phase, Wall } from "./types";
 
-// Trial numbers in roman numerals, correct past 40 (XL, L, XC, C and on)
+// roman numerals for trial numbers, works past 40 (XL, L, XC, C...)
 export const roman = (n: number) => {
   const map: [number, string][] = [[1000, "M"], [900, "CM"], [500, "D"], [400, "CD"], [100, "C"], [90, "XC"], [50, "L"], [40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]];
   let out = "";
@@ -11,14 +11,14 @@ export const roman = (n: number) => {
 };
 export const clock = (sec: number) => { const s = Math.max(0, Math.floor(sec)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
 
-// ---------- Fire ---------- A full fire lasts about three seconds of breathing
+// fire A full meter is about 3 seconds of breathing and refills in about 4
 export const FIRE = { drain: 30, regen: 25, delay: 0.35, relight: 35 };
 
-// ---------- The Dragon's Trial ---------- Sand for each trial: 45 s at trial I
+// dragon's Trial Sand per trial: 45s at I, down to 30s by XX, 20s by XXX, and never below 18s
 export const trialTime = (L: number) => Math.round(L <= 20 ? 45 - ((L - 1) * 15) / 19 : L <= 30 ? 30 - (L - 20) : Math.max(18, 20 - (L - 30) * 0.2));
 export const tier = (L: number) => (L <= 10 ? { name: "Easy", base: 100 } : L <= 20 ? { name: "Medium", base: 150 } : L <= 30 ? { name: "Hard", base: 200 } : { name: "Master", base: 250 });
 export const BONUS = 50;
-// what a trial holds
+// what each trial has
 export const fitCap = (w: number, h: number) => Math.max(5, Math.min(9, Math.floor(((w - 100) * (h - 230)) / 14000)));
 export const trialPlan = (L: number, cap = 9) => {
   const lanterns = Math.min(cap, L <= 20 ? Math.min(4 + Math.floor((L - 1) / 3.5), 9) : Math.max(6, 9 - Math.floor((L - 20) / 3)));
@@ -27,21 +27,21 @@ export const trialPlan = (L: number, cap = 9) => {
   const walls = Math.min(1 + Math.floor(L * 0.7), 11);
   return { lanterns, iron, moving, walls, time: trialTime(L), ...tier(L) };
 };
-// points for clearing a trial: the tier's base, and the bonus when at least half the sand is left
+// points for clearing a trial: base for the tier, plus a bonus if at least half the sand is left
 export const clearPoints = (L: number, left: number, start: number) => ({ base: tier(L).base, bonus: left >= start / 2 ? BONUS : 0 });
 
-// ---------- The Lantern Siege ----------
+// Lantern Siege
 export const SIEGE = { hp: 100, dmg: { plain: 10, great: 15, jade: 0, iron: 10 }, pts: { plain: 10, great: 20, jade: 10, iron: 10 }, heal: 10, greatFrom: 50, jadeFrom: 40 };
-// how fast plain lanterns rise, against the starting pace: a little faster after the first minute
+// plain lantern speed vs the starting pace: a bit faster after minute 1, again after minute 2
 export const siegeSpeed = (e: number) => (e < 60 ? 1 : e < 120 ? 1.1 : Math.min(1.35, 1.18 + Math.floor((e - 120) / 60) * 0.05));
 const rnd = (a: number, b: number) => a + Math.random() * (b - a);
-// the rhythm: a few slow lanterns for the first ten seconds, more for the next thirty, then steadily more
+// pacing: a few slow lanterns for the first 10s, more for the next 30s, then steadily more
 const plainGap = (e: number) => (e < 10 ? rnd(3.2, 4) : e < 40 ? rnd(2.2, 2.8) : e < 60 ? rnd(1.9, 2.5) : Math.max(1.2, 2.1 - (e - 60) * 0.003) * rnd(0.85, 1.15));
 const plainMax = (e: number) => (e < 10 ? 2 : e < 40 ? 3 : e < 60 ? 4 : Math.min(6, 4 + Math.floor((e - 60) / 60)));
-// great lanterns: from 0:50, one at a time and rarely; from 1:35, two at a time; from 4:00, three
+// great lanterns: from 0:50 one at a time and rarely, from 1:35 two at a time, from 4:00 three
 const greatMax = (e: number) => (e < SIEGE.greatFrom ? 0 : e < 95 ? 1 : e < 240 ? 2 : 3);
 const greatGap = (e: number) => (e < 95 ? rnd(13, 18) : e < 180 ? rnd(10, 14) : rnd(8, 11));
-// news of what is coming, shown for a moment as the siege grows harder
+// messages shown briefly as the siege gets harder
 const STAGES: [number, string][] = [
   [10, "More lanterns are rising"],
   [SIEGE.jadeFrom, "Jade lanterns heal Balerian: burn them"],
@@ -54,7 +54,7 @@ const STAGES: [number, string][] = [
 ];
 const MEDAL_NEWS: [number, string][] = [[60, "Bronze medal: you held a minute"], [120, "Silver medal: two minutes"], [180, "Gold medal: three minutes"], [300, "Jade medal: five minutes, a legend"]];
 
-// medals for how long the siege was held
+// medals for how long you held out
 export const MEDALS: [number, string][] = [[300, "Jade"], [180, "Gold"], [120, "Silver"], [60, "Bronze"]];
 export const medal = (sec: number) => MEDALS.find(([t]) => sec >= t)?.[1] ?? null;
 export const nextMedal = (sec: number) => [...MEDALS].reverse().find(([t]) => sec < t) ?? null;
@@ -71,18 +71,18 @@ export type GameEnv = {
   levelRef: { current: number }; phaseRef: { current: Phase };
 };
 export function makeGame($: GameEnv) {
-  // ---------- Trial: build a level ---------- A lantern gets at most two walls on different sides
+  // Trial: build a level A lantern gets at most two walls, on different sides
   const build = (L: number) => {
     const { s, w, h, G, seg } = $;
     const plan = trialPlan(L, fitCap(w, h));
     const nT = plan.lanterns, nW = plan.walls, moving = plan.moving, armoured = plan.iron;
     const lv = Math.min(L, 25);
-    // clear of the scoreboard at the top
+    // stay clear of the scoreboard
     const area = { x0: 50 * s + 20, y0: 150, x1: w - 50 * s - 20, y1: h - 80 };
     const lr = Math.max(13, 17 * s);
     const lanterns: Lantern[] = [];
     const walls: Wall[] = [];
-    // every planned lantern is placed: if they will not fit with generous spacing (a small screen), the spacing
+    // place every lantern
     for (let tries = 0; lanterns.length < nT && tries < 6000; tries++) {
       const i = lanterns.length, squeeze = Math.max(0.3, 1 - Math.floor(tries / 300) * 0.1);
       const amp = i < moving ? Math.min(58, 18 + lv * 2.2) * Math.max(0.7, s) * Math.max(0.6, squeeze) : 0;
@@ -118,7 +118,7 @@ export function makeGame($: GameEnv) {
       const used = sides.get(o) ?? [];
       let wl: Wall;
       if (used.length < 2 && tries < 600) {
-        // shield: a wall on one side of a lantern, never on the side opposite an existing one
+        // shield wall on one side of a lantern, never opposite an existing one
         const side = Math.floor(Math.random() * 4);
         if (used.includes(side) || used.some((u) => (u + 2) % 4 === side)) { i++; continue; }
         const len = (90 + Math.random() * 70) * Math.max(0.75, s);
@@ -133,7 +133,7 @@ export function makeGame($: GameEnv) {
         }
         i++;
       } else {
-        // free-standing wall somewhere in the open
+        // free standing wall somewhere open
         const len = (100 + Math.random() * 120) * Math.max(0.75, s);
         const horiz = Math.random() < 0.5;
         const x = area.x0 + Math.random() * (area.x1 - area.x0 - (horiz ? len : th));
@@ -142,21 +142,21 @@ export function makeGame($: GameEnv) {
         if (clearOf(wl)) walls.push(wl);
       }
     }
-    // (The run's score and lanterns burned carry over from level to level.)
+    // (score and lanterns burned carry over between levels)
     Object.assign(G, { kind: "trial", lanterns, walls, total: lanterns.length, left: lanterns.length, time: plan.time, start: plan.time, doneAt: 0, elapsed: 0, fuel: 100, overheat: false, lastBurn: -9, floats: [], toast: null, over: false });
   };
 
-  // ---------- Siege ----------
+  // Siege
   const startSiege = () => {
     Object.assign($.G, newState("siege"), { nextPlain: 0.6, nextGreat: SIEGE.greatFrom + rnd(0, 4), nextJade: SIEGE.jadeFrom + rnd(0, 6) });
   };
   const lr = () => Math.max(13, 17 * $.s);
-  // the starting pace: a plain lantern takes about sixteen seconds to cross the screen
+  // starting pace: a plain lantern takes about 16s to cross the screen
   const pace = () => ($.h + 2 * lr()) / (16 + (1 - $.s) * 6);
   const spawn = (kind: LanternKind, e: number) => {
     const { w, h, s, G } = $;
     const r = kind === "great" ? lr() * 1.6 : kind === "jade" ? lr() * 0.9 : lr();
-    // not straight under another lantern that has only just risen into view
+    // not right under a lantern that just appeared
     let x = 0;
     for (let k = 0; k < 10; k++) {
       x = rnd(40 + r, w - 40 - r);
@@ -166,14 +166,14 @@ export function makeGame($: GameEnv) {
     const y = h + r + 16;
     G.lanterns.push({ x, y, bx: x, by: y, r, heat: 0, need: kind === "great" ? 36 : kind === "jade" ? 10 : 12, ph: Math.random() * 6.28, amp: rnd(8, 24) * Math.max(0.7, s), spd: rnd(0.5, 1.1), burst: 0, kind, vy });
   };
-  // one step of the siege: the clock, new lanterns, lanterns rising, and any that escape off the top
+  // one siege step: clock, new lanterns, rising, and any that escape
   const stepSiege = (t: number, hurt: (dmg: number) => void) => {
     const { G, h } = $;
     if (!G.over) {
       G.elapsed += 1 / 60;
       const e = G.elapsed;
       while (G.stage < STAGES.length && e >= STAGES[G.stage][0]) { G.toast = { text: STAGES[G.stage][1], at: t }; G.stage++; }
-      // (A medal's news comes a moment after any stage news at the same time, so neither hides the other.)
+      // medal message comes a moment after any stage message so they don't cover each other
       for (const [m, text] of MEDAL_NEWS) if (e - 1 / 60 < m + 3 && e >= m + 3) G.toast = { text, at: t };
       const alive = (k: LanternKind) => G.lanterns.filter((o) => o.burst === 0 && o.kind === k).length;
       if (e >= G.nextPlain) {
@@ -204,7 +204,7 @@ export function makeGame($: GameEnv) {
     }
     void h;
   };
-  // a lantern burned: points, counts and (for jade) healing
+  // Lantern burned: points, counts, and healing for jade
   const burned = (o: Lantern, t: number) => {
     const { G } = $;
     G.burned++;
@@ -225,7 +225,7 @@ export function makeGame($: GameEnv) {
       G.floats.push({ x: o.x, y: o.y - o.r, text: `${G.total - G.left}/${G.total}`, col: "#ffe3a8", at: t });
     }
   };
-  // fire use for one step: breathing drains it; resting refills it after a moment
+  // fire for one step: breathing drains it, resting refills it after a moment
   const fuelStep = (t: number, breathing: boolean) => {
     const { G } = $;
     if (breathing && !G.overheat) {
@@ -267,7 +267,7 @@ export function makeGame($: GameEnv) {
       ctx.lineWidth = 1.5;
       rrect(wl.x, wl.y, wl.w, wl.h, 4);
       ctx.stroke();
-      // moss edge and carved blocks
+      // moss edge and blocks
       ctx.strokeStyle = "rgba(111, 207, 151, 0.35)";
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -287,7 +287,7 @@ export function makeGame($: GameEnv) {
     }
   };
 
-  // paper colours for each kind of lantern: [highlight, middle, edge, glow]
+  // paper colours per lantern type: [highlight, middle, edge, glow]
   const PAPER: Record<LanternKind, { hi: string; mid: string; edge: string; hot: [string, string]; glow: string }> = {
     plain: { hi: "#ffd58a", mid: "#e0612b", edge: "#7d1c10", hot: ["#fff3d0", "#ff9a3a"], glow: "255, 170, 70" },
     iron: { hi: "#ffd58a", mid: "#e0612b", edge: "#7d1c10", hot: ["#fff3d0", "#ff9a3a"], glow: "255, 170, 70" },
@@ -300,7 +300,7 @@ export function makeGame($: GameEnv) {
     for (const o of G.lanterns) {
       const kind = o.kind ?? "plain", pal = PAPER[kind];
       if (o.burst > 0) {
-        // flash ring as it bursts
+        // flash ring when it bursts
         const k = o.burst / 0.6;
         ctx.save();
         ctx.globalCompositeOperation = "lighter";
@@ -327,7 +327,7 @@ export function makeGame($: GameEnv) {
       ctx.fillStyle = gl;
       ctx.beginPath(); ctx.arc(x, y, r * 3.2, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
-      // about to escape (siege): a pulsing red warning ring
+      // about to escape (siege): pulsing red ring
       if (siege && kind !== "jade" && y < h * 0.22) {
         const a = 0.35 + 0.35 * Math.sin(t * 10);
         ctx.strokeStyle = `rgba(255, 90, 70, ${a})`;
@@ -338,7 +338,7 @@ export function makeGame($: GameEnv) {
       ctx.strokeStyle = "rgba(216, 180, 106, 0.5)";
       ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(x, y - r - 4); ctx.lineTo(x, y - r - 14); ctx.stroke();
-      // paper body
+      // paper
       const bg = ctx.createRadialGradient(x - r * 0.2, y - r * 0.2, 1, x, y, r);
       bg.addColorStop(0, hot > 0.6 ? pal.hot[0] : pal.hi);
       bg.addColorStop(0.55, hot > 0.6 ? pal.hot[1] : pal.mid);
@@ -362,7 +362,7 @@ export function makeGame($: GameEnv) {
         ctx.beginPath(); ctx.moveTo(x - r * 0.3, y + r + 4); ctx.lineTo(x - r * 0.3 + Math.sin(t * 3 + o.ph + 1) * 2, y + r + 11); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(x + r * 0.3, y + r + 4); ctx.lineTo(x + r * 0.3 + Math.sin(t * 3 + o.ph + 2) * 2, y + r + 11); ctx.stroke();
       }
-      // iron-banded and great lanterns: bands (iron grey, or gold)
+      // bands for iron (grey) and great (gold) lanterns
       if (kind === "iron" || kind === "great") {
         ctx.strokeStyle = kind === "great" ? "#c9a24e" : "#2e3430";
         ctx.lineWidth = kind === "great" ? 2.5 : 3;
@@ -374,7 +374,7 @@ export function makeGame($: GameEnv) {
           ctx.beginPath(); ctx.arc(x + sx * r, y + k * r + r * 0.17, 1.4, 0, Math.PI * 2); ctx.fill();
         }
       }
-      // jade: a small leaf mark
+      // jade leaf mark
       if (kind === "jade") {
         ctx.strokeStyle = "rgba(240, 255, 245, 0.85)";
         ctx.lineWidth = 1.6;
@@ -389,7 +389,7 @@ export function makeGame($: GameEnv) {
     }
   };
 
-  // ---------- Scoreboard ---------- One panel at the top: the game's name
+  // scoreboard One panel up top: name, score and clock, then sand (trial) or health (siege), the counts
   const font = (px: number, kind: "serif" | "sans" | "mono", weight = 600, italic = false) =>
     `${italic ? "italic " : ""}${weight} ${px}px ${kind === "serif" ? `"Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif` : kind === "mono" ? `"JetBrains Mono", ui-monospace, monospace` : `"Schibsted Grotesk", system-ui, sans-serif`}`;
   const bar = (x: number, y: number, ww: number, hh: number, frac: number, col: string) => {
@@ -403,18 +403,18 @@ export function makeGame($: GameEnv) {
     const { ctx, w, t, G, levelRef, phaseRef } = $;
     const siege = G.kind === "siege";
     if (!siege && !G.total) return;
-    // the score counts up to its new value rather than jumping
+    // score counts up instead of jumping
     G.shown += (G.score - G.shown) * 0.12;
     if (Math.abs(G.score - G.shown) < 0.5) G.shown = G.score;
     G.hpShown += (G.health - G.hpShown) * 0.15;
     const narrow = w < 460;
-    // on narrower screens the panel leaves room at the right for the round pause button
+    // leave room on the right for the pause button on narrow screens
     const room = w < 720 ? 58 : 0;
     const pw = Math.min(600, w - 24 - room), px = room ? 12 : (w - pw) / 2, py = 10, ph = 98, pad = narrow ? 12 : 16;
     ctx.save();
     ctx.fillStyle = "rgba(14, 32, 23, 0.86)";
     rrect(px, py, pw, ph, 14); ctx.fill();
-    // hurt just now: the panel's edge flashes red
+    // flash the edge red when hurt
     const hurt = siege ? Math.max(0, 1 - (t - G.hurtAt) / 0.6) : 0;
     ctx.strokeStyle = hurt > 0 ? `rgba(255, 90, 70, ${0.45 + hurt * 0.5})` : "rgba(216, 180, 106, 0.45)";
     ctx.lineWidth = 1 + hurt;
@@ -440,7 +440,7 @@ export function makeGame($: GameEnv) {
       ctx.fillStyle = sec <= 5 && phaseRef.current === "play" ? "#ff8a5c" : "#e6efe8";
       ctx.fillText(clock(sec), px + pw - pad, y1);
     }
-    // line 2: the sand (trial) or the dragon's health (siege)
+    // line 2: sand or health
     const y2 = py + 38, lw = narrow ? 52 : 62;
     ctx.textAlign = "left";
     ctx.font = font(narrow ? 11 : 12, "sans", 600);
@@ -453,12 +453,12 @@ export function makeGame($: GameEnv) {
       const full = G.time / G.start;
       ctx.fillText("Sand", px + pad, y2 + 3);
       bar(px + pad + lw + 14, y2, pw - pad * 2 - lw - 14, 7, full, full > 0.5 ? "#6fcf97" : full > 0.2 ? "#d8b46a" : "#ff7a45");
-      // the half-sand mark: finish before it for the bonus
+      // half sand mark, finish before it for the bonus
       const mx = px + pad + lw + 14 + (pw - pad * 2 - lw - 14) / 2;
       ctx.fillStyle = "rgba(240, 215, 154, 0.8)";
       ctx.fillRect(mx - 1, y2 - 3, 2, 13);
     }
-    // line 3: the counts and the time
+    // line 3: counts and time
     const y3 = py + 60;
     ctx.font = font(narrow ? 11.5 : 13, "sans", 600);
     ctx.fillStyle = "#e6efe8";
@@ -493,10 +493,10 @@ export function makeGame($: GameEnv) {
     ctx.restore();
   };
 
-  // ---------- Effects over the game: floating points, news, a red edge when hurt ----------
+  // effects on top: floating points, messages, red edge when hurt
   const drawFx = () => {
     const { ctx, w, h, t, G } = $;
-    // hurt: the screen's edges glow red for a moment
+    // red glow on the edges when hurt
     const hurt = G.kind === "siege" ? Math.max(0, 1 - (t - G.hurtAt) / 0.55) : 0;
     if (hurt > 0) {
       const g = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.35, w / 2, h / 2, Math.max(w, h) * 0.75);
@@ -505,7 +505,7 @@ export function makeGame($: GameEnv) {
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, w, h);
     }
-    // the top edge, where siege lanterns escape: a faint red line
+    // faint red line at the top where siege lanterns escape
     if (G.kind === "siege") {
       const g = ctx.createLinearGradient(0, 0, 0, 10);
       g.addColorStop(0, "rgba(255, 80, 60, 0.45)");
@@ -527,7 +527,7 @@ export function makeGame($: GameEnv) {
       ctx.fillText(f.text, f.x, f.y - k * 46);
     }
     ctx.globalAlpha = 1;
-    // news: fades in and out under the scoreboard
+    // messages fade in and out under the scoreboard
     if (G.toast) {
       const k = t - G.toast.at;
       if (k > 2.8) G.toast = null;

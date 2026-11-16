@@ -1,4 +1,4 @@
-// the browser tab icon: the dragon crest, the same artwork as the header logo
+// Tab icon
 import { dragonMark } from "../../../lib/dragonMark";
 
 export const dynamic = "force-static";

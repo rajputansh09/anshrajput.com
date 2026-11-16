@@ -1,4 +1,4 @@
-// Warehouse Wreckage, rebuilt for the browser
+// Warehouse Wreckage
 import { C, Fx, W, H, banner, box, clamp, label, painted, seeded, vignette, type Game, type Input, type State } from "./core";
 import { sfx } from "./sfx";
 
@@ -16,14 +16,14 @@ const mk = (kind: Kind, x: number, y: number, s = 40): Body => {
   };
 };
 const plat = (x: number, y: number, w: number, h: number): Body => ({ ...mk("static", 0, 0), x: x + w / 2, y: y + h / 2, w, h });
-// a steel rack: a top beam on two legs
+// steel rack: a beam on two legs
 let rackId = 0;
 const shelf = (b: Body[], x: number, y: number, w: number) => {
   const g = ++rackId;
   for (const part of [plat(x, y, w, 14), plat(x + 4, y + 14, 10, FLOOR - y - 14), plat(x + w - 14, y + 14, 10, FLOOR - y - 14)]) b.push({ ...part, kind: "rack", grp: g, hits: 0 });
 };
 const frame = (): Body[] => [plat(0, FLOOR, W, 60), plat(-40, -400, 40, FLOOR + 400), plat(W, -400, 40, FLOOR + 400)];
-// a pyramid or block of crates whose bottom row sits on `base`
+// pyramid or block of crates sitting on base
 const stack = (b: Body[], x: number, base: number, rows: number[], s = 40) => {
   rows.forEach((n, r) => { const off = ((rows[0] - n) * (s + 1)) / 2; for (let i = 0; i < n; i++) b.push(mk("crate", x + off + i * (s + 1), base - s / 2 - r * (s + 1), s)); });
 };
@@ -81,7 +81,7 @@ export const LEVELS: Level[] = [
   },
 ];
 
-// brick wall, a high window throwing light, a concrete floor: painted once
+// brick wall, high window, concrete floor
 let backdrop: HTMLCanvasElement | null | undefined;
 function wall() {
   if (backdrop !== undefined) return backdrop;
@@ -95,7 +95,7 @@ function wall() {
       c.fillStyle = `rgb(${v + 6},${v},${v - 2})`; c.fillRect(x + 1, y + 1, 38, 16);
     }
     c.fillStyle = "rgba(0,0,0,0.35)"; c.fillRect(0, 0, W, FLOOR);
-    // windows with light shafts falling to the floor
+    // windows with light shafts
     for (const wx of [260, 620]) {
       c.fillStyle = "rgba(216,200,150,0.16)"; c.fillRect(wx, 40, 150, 80);
       c.strokeStyle = "rgba(216,180,106,0.25)"; c.lineWidth = 3; c.strokeRect(wx, 40, 150, 80);
@@ -137,12 +137,12 @@ export class Warehouse implements Game {
     for (const b of this.bodies) if (b.kind === "ball" && !b.dead) { b.trail.push({ x: b.x, y: b.y }); if (b.trail.length > 8) b.trail.shift(); }
     if (this.state !== "play") return;
     this.t += dt;
-    // aim: the pointer on desktop; on touch, the stick (or the aim stick) points the launcher
+    // aim with the pointer on desktop, the stick on touch
     if (inp.aimed) this.aim = clamp(Math.atan2(inp.aimY - LAUNCH.y, inp.aimX - LAUNCH.x), -1.35, 0.35);
     else if (Math.hypot(inp.bx, inp.by) > 0.35) this.aim = clamp(Math.atan2(inp.by, Math.max(0.05, inp.bx)), -1.35, 0.35);
     else if (inp.drag) this.aim = clamp(this.aim + inp.drag * 0.0065, -1.35, 0.35);
     else this.aim = clamp(this.aim + (inp.ay - inp.ax * 0.5) * 1.2 * dt, -1.35, 0.35);
-    // hold to charge, let go to throw
+    // hold to charge, release to throw
     if (this.shots > 0 && !this.endAt) {
       if (inp.fire) this.charge = Math.min(1, this.charge + dt * 0.9);
       else if (this.charge > 0) {
@@ -156,7 +156,7 @@ export class Warehouse implements Game {
       }
     }
     if (this.broken >= this.total) { this.state = "won"; sfx.play("win"); return; }
-    // out of balls: give the last one a few seconds to finish its work
+    // out of balls, give the last one a few seconds
     if (this.shots === 0 && !this.endAt) this.endAt = this.t + 4;
     if (this.endAt && this.t > this.endAt) {
       this.state = this.broken / this.total >= this.L.goal ? "won" : "lost";
@@ -171,7 +171,7 @@ export class Warehouse implements Game {
       b.vy += G * dt;
       b.x += b.vx * dt; b.y += b.vy * dt;
       if (b.r) b.spin += (b.vx / b.r) * dt;
-      // the loading bay in front of the thrower: a blast can't push a crate somewhere no throw can reach
+      // keep crates out of the area in front of the thrower so a blast can't push one where no throw can reach
       if (b.kind !== "ball" && b.x - b.w / 2 < BAY) { b.x = BAY + b.w / 2; if (b.vx < 0) b.vx *= -0.3; }
       if (b.x < -100 || b.x > W + 100 || b.y > H + 200) b.dead = b.kind !== "crate" ? true : b.dead;
     }
@@ -181,7 +181,7 @@ export class Warehouse implements Game {
         if (!a.m && !b.m) continue;
         this.collide(a, b);
       }
-    // balls come to rest and fade
+    // balls stop and fade
     for (const b of B) {
       if (b.kind === "ball" && Math.hypot(b.vx, b.vy) < 20) { b.sleep += dt; if (b.sleep > 2) b.dead = true; }
       else if ((b.kind === "crate" || b.kind === "beam") && b.rest && Math.abs(b.vx) + Math.abs(b.vy) < 16) { b.vx *= 0.6; b.vy *= 0.6; }
@@ -207,7 +207,7 @@ export class Warehouse implements Game {
       const sx = dx / d, sy = dy / d;
       if (c === b) { nx = sx; ny = sy; } else { nx = -sx; ny = -sy; }
     }
-    // which of the two is standing on the other (the normal points from a to b, and y grows downward)
+    // which one is on top (normal points a to b, y grows down)
     if (ny > 0.5) a.rest = true; else if (ny < -0.5) b.rest = true;
     const ia = a.m ? 1 / a.m : 0, ib = b.m ? 1 / b.m : 0, sum = ia + ib;
     if (!sum) return;
@@ -220,21 +220,21 @@ export class Warehouse implements Game {
     const j = (-(1 + e) * vn) / sum;
     a.vx -= j * nx * ia; a.vy -= j * ny * ia;
     b.vx += j * nx * ib; b.vy += j * ny * ib;
-    // friction along the contact
+    // friction
     const tx = -ny, ty = nx, vt = rvx * tx + rvy * ty, jt = clamp(-vt / sum, -j * 0.6, j * 0.6);
     a.vx -= jt * tx * ia; a.vy -= jt * ty * ia;
     b.vx += jt * tx * ib; b.vy += jt * ty * ib;
-    // damage from hard hits, with a knock and a puff of dust you can hear and see
+    // damage from hard hits, with a knock sound and a dust puff
     const hit = -vn;
     if (hit > 240) {
       const px = (a.x + b.x) / 2, py = (a.y + b.y) / 2;
       if (hit > 420) { this.fx.smoke(px, py, 2, "rgba(160,150,130,1)", 7, -20); sfx.play(a.kind === "ball" || b.kind === "ball" ? "knock" : "land", Math.min(1, hit / 900)); }
       for (const q of [a, b]) this.hurt(q, (hit - 240) * (q === a ? (b.kind === "ball" ? 0.55 : 0.3) : (a.kind === "ball" ? 0.55 : 0.3)));
     }
-    // a ball slamming into a rack counts as one hit on that rack
+    // a ball hitting a rack counts as one hit
     if (hit > 260) for (const [q, o] of [[a, b], [b, a]] as const) if (q.kind === "rack" && o.kind === "ball") this.hitRack(q, (a.x + b.x) / 2, (a.y + b.y) / 2, o.vx);
   }
-  // each rack takes two hits: a dent with sparks, then it buckles
+  // racks take 2 hits: a dent with sparks, then they buckle and turn into loose steel
   hitRack(q: Body, px: number, py: number, push: number) {
     if (q.kind !== "rack" || this.t - (q.hitAt ?? -9) < 0.25) return;
     const parts = this.bodies.filter((o) => o.grp === q.grp && o.kind === "rack");
@@ -245,10 +245,10 @@ export class Warehouse implements Game {
     for (const o of parts) {
       o.kind = "beam"; o.sleep = 0;
       if (o.w > o.h) {
-        // the top beam drops with everything on it
+        // beam drops with everything on it
         o.m = 2.5; o.vx = Math.sign(push || 1) * (60 + Math.random() * 80); o.vy = -40;
       } else {
-        // legs buckle where they stand: a crushed stub at the floor, so nothing is held up any more
+        // legs buckle into stubs so nothing is held up anymore
         this.fx.spray(o.x, o.y, -Math.PI / 2, 1.6, "#ffd36a", 8, 220, 2);
         o.h = 18; o.y = FLOOR - 9; o.m = 1.5; o.vx = 0; o.vy = 0;
       }
@@ -271,7 +271,7 @@ export class Warehouse implements Game {
       this.fx.shake = Math.max(this.fx.shake, 0.35);
       sfx.play("crate");
     } else if (q.kind === "red") {
-      // explosion: a radial impulse that throws and damages everything nearby
+      // explosion: radial push that throws and damages everything nearby
       this.fx.burst(q.x, q.y, C.fire, 70, 440, 0, 5);
       this.fx.chunks(q.x, q.y, "#8a2a1e", 10, 360, 900, 6);
       this.fx.smoke(q.x, q.y, 16, "rgba(80,76,70,1)", 22, -40);
@@ -295,7 +295,7 @@ export class Warehouse implements Game {
     c.save(); c.translate(o.x, o.y);
     const bd = wall();
     if (bd) c.drawImage(bd, 0, 0); else { c.fillStyle = "#171c1a"; c.fillRect(-20, -20, W + 40, H + 40); }
-    // hanging lamps that sway a little
+    // hanging lamps swaying a bit
     for (const lx of [180, 540, 860]) {
       const sw = Math.sin(t * 1.3 + lx) * 0.05, ex = lx + Math.sin(sw) * 70, ey = Math.cos(sw) * 70;
       c.strokeStyle = "#3a403c"; c.lineWidth = 2; c.beginPath(); c.moveTo(lx, 0); c.lineTo(ex, ey); c.stroke();
@@ -308,7 +308,7 @@ export class Warehouse implements Game {
     this.fx.drawUnder(c);
     for (const b of this.bodies) {
       if (b.dead) continue;
-      // contact shadow on whatever is below
+      // contact shadow
       if (b.kind !== "static") { c.fillStyle = "rgba(0,0,0,0.25)"; c.beginPath(); c.ellipse(b.x + 4, b.y + (b.r || b.h / 2) + 2, (b.r || b.w / 2) * 0.9, 4, 0, 0, Math.PI * 2); c.fill(); }
       if (b.kind === "ball" && b.trail.length > 2) {
         c.strokeStyle = "rgba(200,210,215,0.18)"; c.lineWidth = b.r * 1.2; c.lineCap = "round";
@@ -356,7 +356,7 @@ export class Warehouse implements Game {
       }
       c.restore();
     }
-    // launcher and the aim guide
+    // launcher and aim guide
     c.fillStyle = "#2c3a33"; box(c, LAUNCH.x - 34, LAUNCH.y, 68, FLOOR - LAUNCH.y, 6); c.fill();
     c.fillStyle = "#3a4d44"; box(c, LAUNCH.x - 30, LAUNCH.y + 4, 60, 8, 3); c.fill();
     c.save(); c.translate(LAUNCH.x, LAUNCH.y); c.rotate(this.aim);
@@ -378,7 +378,7 @@ export class Warehouse implements Game {
     }
     // balls left
     for (let k = 0; k < this.L.shots; k++) { c.fillStyle = k < this.shots ? "#8a96a0" : "#2a322e"; c.beginPath(); c.arc(30 + k * 18, 30, 6, 0, Math.PI * 2); c.fill(); }
-    // progress toward the goal
+    // progress to the goal
     const pct = this.broken / this.total;
     c.fillStyle = "rgba(0,0,0,0.5)"; box(c, W - 230, 22, 200, 10, 3); c.fill();
     c.fillStyle = pct >= this.L.goal ? C.moss : C.brass; box(c, W - 230, 22, 200 * pct, 10, 3); c.fill();

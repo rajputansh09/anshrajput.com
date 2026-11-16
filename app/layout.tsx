@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     locale: "en_CA",
   },
   twitter: { card: "summary_large_image", title, description },
-  // the crest at new addresses under /icons (lib/crestIcon.tsx)
+  // icons live under /icons and get rechecked on every visit, so an old cached logo can't stick around again
   icons: {
     icon: [
       { url: "/icons/crest.svg", type: "image/svg+xml" },
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { themeColor: "#07110c", colorScheme: "dark" };
 
-// structured data so search engines connect this site, the LinkedIn and GitHub profiles
+// JSON-LD so search engines tie this site, my LinkedIn, GitHub and UCert to me
 const person = {
   "@type": "Person",
   "@id": `${site.url}/#person`,

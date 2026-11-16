@@ -1,4 +1,4 @@
-// the detailed dragon crest as a standalone SVG, used as the faint watermark behind the hero
+// crest SVG used as the faded watermark behind the hero
 import { dragonMark } from "../../lib/dragonMark";
 
 export const dynamic = "force-static";

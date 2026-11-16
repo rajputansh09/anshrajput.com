@@ -1,10 +1,10 @@
 "use client";
-// the head, coloured from the dragon's palette
+// dragon head, coloured from its palette
 import type { P } from "./types";
 import type { Parts } from "./parts";
 import type { Pal } from "./palette";
 
-// the head, seen from above: local frame +x toward the snout, +y to the dragon's right
+// head from above
 let cache: ReturnType<typeof makePaths> | null = null;
 function makePaths() {
   return {
@@ -42,7 +42,7 @@ export type HeadEnv = {
 export function drawHead($: HeadEnv) {
   const { ctx, seg, dirAt, HS, mouth, t, blinkAt, blinkLen, look, s, dpr, blade, boneFill, pal } = $;
   const A = (cache ??= makePaths());
-    // head, seen from above: fins, ringed horns, jaws that part sideways, fangs, brows, tracking eyes and whiskers
+    // fins, horns, jaws that open sideways, fangs, brows, eyes that track and whiskers
     const hp = seg[0], hd = dirAt(0);
     const open = mouth * mouth * (3 - 2 * mouth);
     const bp = (t - blinkAt) / blinkLen;
@@ -62,7 +62,7 @@ export function drawHead($: HeadEnv) {
       for (const side of [1, -1]) { ctx.save(); ctx.scale(1, side); fn(side); ctx.restore(); }
     };
     halves(() => {
-      // webbed neck fin with brass ribs
+      // neck fin with brass ribs
       ctx.fillStyle = lg(-12, 10, -50, 36, [[0, pal.fin[0]], [1, pal.fin[1]]]);
       ctx.strokeStyle = pal.line;
       ctx.lineWidth = 1.2;
@@ -71,7 +71,7 @@ export function drawHead($: HeadEnv) {
       ctx.strokeStyle = "rgba(201, 170, 110, 0.75)";
       ctx.lineWidth = 1;
       ctx.stroke(A.finRibs);
-      // two swept horns, ringed
+      // two horns
       ctx.strokeStyle = "#2a1a08";
       ctx.lineWidth = 1.2;
       ctx.fillStyle = boneFill(-6, 19, -61, 54);
@@ -84,13 +84,13 @@ export function drawHead($: HeadEnv) {
       ctx.lineWidth = 1;
       ctx.stroke(A.horn2Rings);
       ctx.stroke(A.horn1Rings);
-      // beard under the chin
+      // beard
       ctx.strokeStyle = "rgba(217, 196, 140, 0.7)";
       ctx.lineWidth = 1.3;
       ctx.stroke(A.beard);
-      // throat, then the lower jaw hinged at the back, swinging out to breathe
+      // throat, then the lower jaw swinging out to breathe
       if (open > 0.01) {
-        // throat: from the centre line out to the swung jaw's inner edge, so nothing pokes past the snout
+        // throat goes from the centre line to the jaw's inner edge so nothing pokes past the snout
         const a = open * 0.3, ca = Math.cos(a), sa = Math.sin(a);
         const rot = (x: number, y: number) => [x * ca - (y - 6) * sa, x * sa + (y - 6) * ca + 6] as const;
         ctx.fillStyle = "#4a0d06";
@@ -127,7 +127,7 @@ export function drawHead($: HeadEnv) {
       ctx.fillStyle = mg;
       ctx.beginPath(); ctx.arc(50, 0, 22, 0, Math.PI * 2); ctx.fill();
     }
-    // skull: deep green, rounded with shading, snout ridge plates and fine scales
+    // skull: dark green with shading, ridge plates on the snout and small scales
     ctx.fillStyle = lg(-20, 0, 57, 0, [[0, pal.skull[0]], [0.45, pal.skull[1]], [1, pal.skull[2]]]);
     ctx.fill(A.skull);
     ctx.save();
@@ -155,7 +155,7 @@ export function drawHead($: HeadEnv) {
       ctx.strokeStyle = pal.cheek;
       ctx.lineWidth = 0.9;
       ctx.stroke(A.cheek);
-      // mouth seam along the jaw line, as on the crest
+      // mouth line, like on the crest
       ctx.strokeStyle = `rgba(74, 13, 6, ${0.9 * (1 - open)})`;
       ctx.lineWidth = 1.1;
       ctx.stroke(A.lip);
@@ -170,10 +170,10 @@ export function drawHead($: HeadEnv) {
       ctx.strokeStyle = pal.browLight;
       ctx.lineWidth = 0.9;
       ctx.stroke(A.browLight);
-      // glowing eye; the slit pupil follows what the dragon is watching, and the lid blinks
+      // glowing eye
       ctx.save();
       if (s > 0.7) {
-        // the glow blur is costly and barely visible at phone size, so it only runs on larger screens
+        // glow blur is expensive and you can barely see it on a phone, so skip it there
         ctx.shadowColor = `rgba(255, 110, 20, ${0.75 + open * 0.25})`;
         ctx.shadowBlur = (9 + open * 16) * dpr;
       }
@@ -208,7 +208,7 @@ export function drawHead($: HeadEnv) {
       ctx.restore();
       ctx.fillStyle = "#020604";
       ctx.beginPath(); ctx.ellipse(50, 2.6, 2.2, 1.1, 0.4, 0, Math.PI * 2); ctx.fill();
-      // long whisker, swaying, fading toward its tip
+      // long swaying whisker that fades out
       ctx.strokeStyle = lg(49, 4, -43, 26, [[0, "#f3e2b0"], [1, "rgba(243, 226, 176, 0)"]]);
       ctx.lineWidth = 1.6;
       ctx.beginPath();
