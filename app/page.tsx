@@ -9,7 +9,7 @@ import Astrolabe from "../components/Astrolabe";
 import Arcade from "../components/Arcade";
 import { Channels, PlayButton, Reveal, Terminal, ToTop, Year } from "../components/Extras";
 import RailToggle from "../components/RailToggle";
-import { projects, site } from "../lib/site";
+import { faqs, projects, site } from "../lib/site";
 import "./portrait.css";
 
 type Case = {
@@ -329,6 +329,31 @@ export default function Home() {
               </div>
             </div>
           </div>
+        </section>
+
+        <section id="facts" className="wrap section" aria-labelledby="facts-h">
+          <div className="section-top">
+            <h2 id="facts-h">Quick facts</h2>
+            <p>The short version, for recruiters and search engines.</p>
+          </div>
+          <dl className="facts">
+            {faqs.map((f) => (
+              <div key={f.q}>
+                <dt>{f.q}</dt>
+                <dd>{f.a}</dd>
+              </div>
+            ))}
+          </dl>
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "FAQPage",
+                mainEntity: faqs.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+              }),
+            }}
+          />
         </section>
 
         <section id="contact" className="wrap section contact" aria-labelledby="contact-h">

@@ -55,19 +55,27 @@ const person = {
   image: `${site.url}/ansh-rajput.webp`,
   description,
   jobTitle: "Software Engineer",
+  hasOccupation: { "@type": "Occupation", name: "Software Engineer", occupationLocation: { "@type": "City", name: "Edmonton" } },
   email: `mailto:${site.email}`,
   address: { "@type": "PostalAddress", addressLocality: "Edmonton", addressRegion: "AB", addressCountry: "CA" },
-  alumniOf: { "@type": "CollegeOrUniversity", name: "University of Alberta", url: "https://www.ualberta.ca" },
-  founder: { "@type": "Organization", name: "UCert" },
+  affiliation: { "@type": "CollegeOrUniversity", name: "University of Alberta", url: "https://www.ualberta.ca" },
+  founder: {
+    "@type": "Organization",
+    name: "UCert",
+    description: "Multi-tenant ISO certification platform that generates each standard's preloaded Word documents and keeps every certification record in one place.",
+  },
   sameAs: [site.github, site.linkedin],
   knowsLanguage: ["English", "Hindi", "Punjabi"],
-  knowsAbout: ["Software engineering", "Next.js", "TypeScript", "Node.js", "PostgreSQL", "Supabase", "ISO 9001"],
+  knowsAbout: [
+    "Software engineering", "Full-stack web development", "Next.js", "React", "TypeScript", "JavaScript", "Node.js", "Express",
+    "PostgreSQL", "Supabase", "Stripe", "Technical SEO", "C", "C++", "Python", "Unreal Engine 5", "ISO 9001",
+  ],
 };
 const schema = {
   "@context": "https://schema.org",
   "@graph": [
     person,
-    { "@type": "WebSite", "@id": `${site.url}/#website`, url: site.url, name: "Ansh Rajput", publisher: { "@id": `${site.url}/#person` } },
+    { "@type": "WebSite", "@id": `${site.url}/#website`, url: site.url, name: "Ansh Rajput", inLanguage: "en-CA", publisher: { "@id": `${site.url}/#person` } },
     { "@type": "ProfilePage", "@id": `${site.url}/#profile`, url: site.url, name: title, mainEntity: { "@id": `${site.url}/#person` } },
   ],
 };

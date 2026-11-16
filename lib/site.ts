@@ -9,6 +9,30 @@ export const site = {
   timeZone: "America/Edmonton",
 };
 
+// quick facts
+export const faqs: { q: string; a: string }[] = [
+  {
+    q: "Who is Ansh Rajput?",
+    a: "Ansh Rajput is a software engineer and a Computer Engineering (Software co-op) student at the University of Alberta in Edmonton, graduating in 2028. He builds full-stack web platforms with Next.js, TypeScript, Node.js and PostgreSQL.",
+  },
+  {
+    q: "What has Ansh Rajput built?",
+    a: "The 29-page lead and booking platform for CertCanada (certcanada.ca), the multi-city website for Twish Care (twishcare.ca), UCert, an ISO certification platform he founded, and this site, which runs five of his Unreal Engine games in the browser.",
+  },
+  {
+    q: "What is UCert?",
+    a: "UCert is a multi-tenant ISO certification platform Ansh is building with Next.js, TypeScript, Supabase and Stripe. It generates each ISO standard's preloaded Word documents and keeps every certification record in one place.",
+  },
+  {
+    q: "Is Ansh Rajput open to work?",
+    a: "Yes. He is looking for software engineering co-op and internship roles and is open to relocating anywhere in Canada.",
+  },
+  {
+    q: "How can I contact Ansh Rajput?",
+    a: "Use the contact form at the bottom of anshrajput.com, email arajput3@ualberta.ca, or message him on LinkedIn.",
+  },
+];
+
 export const sections = [
   { id: "work", label: "Work" },
   { id: "projects", label: "Projects" },

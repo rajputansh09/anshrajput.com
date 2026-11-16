@@ -341,6 +341,13 @@ kbd {
 .skills div { display: grid; grid-template-columns: 160px 1fr; gap: 16px; padding-top: 12px; border-top: 1px solid var(--line); }
 .skills dt { color: var(--muted); }
 
+.facts { display: grid; margin-top: 8px; }
+.facts div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 32px; padding: 22px 0; border-top: 1px solid var(--line); }
+.facts div:first-child { border-top: 0; }
+.facts dt { font-size: 18px; font-weight: 600; letter-spacing: -0.015em; line-height: 1.35; }
+.facts dd { color: #b5c7bc; font-size: 16px; line-height: 1.65; max-width: 64ch; }
+@media (max-width: 720px) { .facts div { grid-template-columns: 1fr; gap: 8px; padding: 18px 0; } }
+
 /* contact */
 .contact { padding-bottom: 96px; }
 .contact-grid {
