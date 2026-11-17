@@ -8,6 +8,16 @@ export const metadata: Metadata = {
   title: "Resume",
   description: "Resume of Ansh Rajput: full-stack developer and Computer Engineering co-op student at the University of Alberta. Next.js, TypeScript, React, Node.js, PostgreSQL, C++, Unreal Engine 5.",
   alternates: { canonical: "/resume" },
+  // its own preview, so a resume link shared on LinkedIn doesn't show the home page card
+  openGraph: {
+    title: "Ansh Rajput | Resume",
+    description: "One page: UCert, CertCanada, Twish Care, my co-op term, projects and skills. PDF download included.",
+    url: "/resume",
+    siteName: "Ansh Rajput",
+    type: "website",
+    locale: "en_CA",
+  },
+  twitter: { card: "summary_large_image", title: "Ansh Rajput | Resume" },
 };
 
 type Entry = { org: string; right: string; sub?: string; subRight?: string; bullets: string[]; link?: string; label?: string };

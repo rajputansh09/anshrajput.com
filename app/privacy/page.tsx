@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: "Privacy",
   description: "What anshrajput.com collects, why, and what it does not do.",
   alternates: { canonical: "/privacy" },
+  openGraph: { title: "Privacy | Ansh Rajput", description: "What anshrajput.com collects, why, and what it does not do.", url: "/privacy", siteName: "Ansh Rajput", type: "website", locale: "en_CA" },
 };
 
 export default function Privacy() {
