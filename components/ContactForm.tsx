@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { copyEmail } from "./Chrome";
 import { site } from "../lib/site";
 
@@ -27,7 +27,9 @@ export default function ContactForm() {
   const [reason, setReason] = useState(reasons[0]);
   const [v, setV] = useState({ name: "", email: "", company: "", message: "", website: "" });
   const [touched, setTouched] = useState<Record<string, boolean>>({});
-  const [state, setState] = useState<"idle" | "sending" | "sent" | "error" | "offline" | "limited" | "invalid" | "network">("idle");
+  const [state, setState] = useState<"idle" | "sending" | "sent" | "error" | "offline" | "limited" | "invalid" | "badEmail" | "network">("idle");
+  // when the form first showed up
+  const shownAt = useRef(Date.now());
   const [ref, setRef] = useState("");
 
   const errors = validate(v);
@@ -45,7 +47,7 @@ export default function ContactForm() {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...v, reason: reason.label }),
+        body: JSON.stringify({ ...v, reason: reason.label, t: Date.now() - shownAt.current }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
@@ -53,6 +55,7 @@ export default function ContactForm() {
         setState("sent");
       } else if (res.status === 429) setState("limited");
       else if (res.status === 503) setState("offline");
+      else if (res.status === 422) setState("badEmail");
       else if (res.status === 400) setState("invalid");
       else setState("error");
     } catch {
@@ -160,6 +163,7 @@ export default function ContactForm() {
         {state === "error" && "Something went wrong on my side. Please try again, or email me directly."}
         {state === "invalid" && "Something in the form didn't pass the check. Make sure your email is complete and the message is 10 to 2,000 characters."}
         {state === "network" && "Couldn't reach the server. Check your connection and try again."}
+        {state === "badEmail" && "That email address can't receive mail. Please check it, or use another one."}
         {state === "limited" && "You've sent a few messages already. Give it an hour, or email me directly."}
         {state === "offline" && (
           <>

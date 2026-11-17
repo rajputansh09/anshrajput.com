@@ -65,7 +65,7 @@ const person = {
     description: "Multi-tenant ISO certification platform that generates each standard's preloaded Word documents and keeps every certification record in one place.",
   },
   sameAs: [site.github, site.linkedin],
-  knowsLanguage: ["English", "Hindi", "Punjabi"],
+  knowsLanguage: ["English"],
   knowsAbout: [
     "Software engineering", "Full-stack web development", "Next.js", "React", "TypeScript", "JavaScript", "Node.js", "Express",
     "PostgreSQL", "Supabase", "Stripe", "Technical SEO", "C", "C++", "Python", "Unreal Engine 5", "ISO 9001",

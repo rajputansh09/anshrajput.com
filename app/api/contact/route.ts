@@ -1,21 +1,27 @@
 // contact form API
 import { site } from "../../../lib/site";
 import { ownerEmail, senderEmail } from "../../../lib/email";
+import { checkEmailDomain } from "../../../lib/emailDomain";
+import { createHash } from "node:crypto";
 
 const HOUR = 60 * 60 * 1000;
 const PER_EMAIL = 3;
-const PER_IP = 5;
+const PER_IP = 3;
+const PER_IP_DAY = 6;
+const DAY = 24 * HOUR;
+const MIN_FILL_MS = 3000;
 const GLOBAL = 40;
 const MAX_BODY = 8_000;
 
 const byEmail = new Map<string, number[]>();
 const byIp = new Map<string, number[]>();
+const seenMessages = new Map<string, number>();
 let all: number[] = [];
 
 const EMAIL_RE = /^[^\s@<>"',;]+@[^\s@<>"',;]+\.[^\s@<>"',;]{2,}$/;
 const REASONS = ["Co-op or internship", "Freelance project", "Collaboration", "Just saying hi"];
 
-const recent = (list: number[] | undefined, now: number) => (list ?? []).filter((t) => now - t < HOUR);
+const recent = (list: number[] | undefined, now: number, span = HOUR) => (list ?? []).filter((t) => now - t < span);
 
 // single line text: strip control chars and line breaks (no header injection), collapse spaces, cap length
 const line = (v: unknown, max: number) =>
@@ -101,6 +107,11 @@ export async function POST(req: Request) {
   const ref = crypto.randomUUID().replace(/-/g, "").slice(0, 6).toUpperCase();
 
   if (body.website) return Response.json({ ok: true, ref });
+  // filled in faster than a person could type: pretend it worked too
+  if (typeof body.t === "number" && body.t < MIN_FILL_MS) {
+    console.log(`contact: dropped a ${Math.round(body.t)}ms submission as a bot`);
+    return Response.json({ ok: true, ref });
+  }
 
   if (name.length < 2 || !EMAIL_RE.test(email) || message.length < 10 || message.length > 2000) {
     return fail("invalid", 400);
@@ -109,9 +120,27 @@ export async function POST(req: Request) {
   const now = Date.now();
   const ip = clientIp(req);
   const mine = recent(byEmail.get(email), now);
-  const fromIp = recent(byIp.get(ip), now);
+  const fromIpDay = recent(byIp.get(ip), now, DAY);
+  const fromIp = recent(fromIpDay, now);
   all = recent(all, now);
-  if (mine.length >= PER_EMAIL || fromIp.length >= PER_IP || all.length >= GLOBAL) return fail("rate_limited", 429);
+  if (mine.length >= PER_EMAIL || fromIp.length >= PER_IP || fromIpDay.length >= PER_IP_DAY || all.length >= GLOBAL) {
+    console.log(`contact: rate limited ${mask(email)}`);
+    return fail("rate_limited", 429);
+  }
+
+  // same words again within a day, whatever address it claims to be from
+  const fingerprint = createHash("sha256").update(message.toLowerCase().replace(/\s+/g, " ")).digest("hex");
+  const lastSeen = seenMessages.get(fingerprint);
+  if (lastSeen && now - lastSeen < DAY) {
+    console.log(`contact: repeated message from ${mask(email)}`);
+    return fail("rate_limited", 429);
+  }
+
+  const domain = await checkEmailDomain(email);
+  if (domain !== "ok") {
+    console.log(`contact: rejected ${mask(email)} (${domain})`);
+    return fail("bad_email", 422);
+  }
 
   const key = process.env.RESEND_API_KEY;
   const envTo = (process.env.CONTACT_TO || "").trim().replace(/^["']|["']$/g, "");
@@ -140,10 +169,12 @@ export async function POST(req: Request) {
   }
   // only count successful sends so a random failure doesn't lock someone out
   byEmail.set(email, [...mine, now]);
-  byIp.set(ip, [...fromIp, now]);
+  byIp.set(ip, [...fromIpDay, now]);
+  seenMessages.set(fingerprint, now);
   all.push(now);
   if (byEmail.size > 5000) byEmail.clear();
   if (byIp.size > 5000) byIp.clear();
+  if (seenMessages.size > 5000) seenMessages.clear();
 
   // if the confirmation fails that's fine, I still got the message
   try {
