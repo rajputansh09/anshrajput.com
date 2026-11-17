@@ -177,7 +177,7 @@ export function Channels() {
       <li>
         <a className="channel" href={site.linkedin} target="_blank" rel="noreferrer">
           <Icon d="M5 9.5v9M5 5.5v.5M9.5 18.5v-9M9.5 13c0-2 1.3-3.5 3.3-3.5s3.2 1.4 3.2 3.6v5.4" />
-          <span><b>LinkedIn</b><small>ansh-rajput</small></span>
+          <span><b>LinkedIn</b><small>rajputansh09</small></span>
           <em>↗</em>
         </a>
       </li>
