@@ -29,8 +29,7 @@ const experience: Entry[] = [
     sub: "Founder and Software Engineer",
     subRight: "Remote",
     bullets: [
-      "Architected a **multi-tenant ISO certification SaaS** on **Next.js and Supabase** that generates **preloaded Word documents**",
-      "Developed self-serve readiness tools: **10 ISO 9001 modules**, a **30-question** quiz, and an **auto-saving 73-question** gap analysis",
+      "Architected a **multi-tenant ISO certification SaaS** on **Next.js and Supabase** that generates **preloaded Word documents**, with **10 ISO 9001 modules**, a **30-question** quiz, and an **auto-saving 73-question** gap analysis",
       "Integrated **Stripe** billing across **3 plans** with checkout, cancel and resume, **webhooks**, and per-plan usage limits",
     ],
   },
@@ -39,16 +38,14 @@ const experience: Entry[] = [
     right: "Mar 2026 - Present",
     sub: "Full-Stack Developer | certcanada.ca",
     bullets: [
-      "Delivered a **29-page** lead-generating platform on **Next.js, Express, and PostgreSQL** scoring **100/100 on PageSpeed Insights**",
+      "Delivered a **29-page** lead-generating platform on **Next.js, Express, and PostgreSQL** scoring **100/100 on PageSpeed Insights**, with **self-serve booking** on the **Google Calendar API** secured by **JWT** and **rate limiting**",
       "Grew search-indexed pages from **19 to 29 (+53%)** by migrating React/Vite to **Next.js SSR**, fixing a sitemap bug, and serving static HTML per page for Bing, which does not run JavaScript",
-      "Replaced scheduling emails with **self-serve booking** on the **Google Calendar API**, secured by **JWT** and **rate limiting**",
     ],
   },
   {
     org: "Calgary Board of Education, Alberta Computers for Schools",
     right: "Feb 2026 - May 2026",
     sub: "Computer Technician (Co-op)",
-    subRight: "Calgary, AB",
     bullets: [
       "Returned **100+ desktops and laptops** to Alberta classrooms in **4 months** by diagnosing and fixing software and OS faults",
       "Imaged, configured, and **QA-tested 100%** of devices so schools and community groups received ready-to-use computers",
@@ -59,8 +56,7 @@ const experience: Entry[] = [
     right: "Aug 2025",
     sub: "Full-Stack Developer | twishcare.ca",
     bullets: [
-      "Redesigned the practice's outdated site into a **modern, mobile-responsive** layout with clear navigation",
-      "Expanded a psychotherapy practice's reach to **3 Ontario cities** with a **Node.js/Express** site and **3 Google Business Profiles**",
+      "Redesigned a psychotherapy practice's outdated site into a **modern, mobile-responsive Node.js/Express** site, expanding its reach to **3 Ontario cities** with **3 Google Business Profiles**",
       "Launched an inquiry pipeline with **2 automated emails** per request (owner alert, client confirmation) and a **honeypot** for bots",
     ],
   },
@@ -73,9 +69,8 @@ const projects: Entry[] = [
     label: "Live Site",
     right: "Next.js | TypeScript | Canvas 2D",
     bullets: [
-      "Shipped a **Next.js 16, React 19, TypeScript** site on **Vercel** with **serverless APIs**, a strict **CSP**, and **0 known npm vulnerabilities**",
-      "Engineered a **Canvas 2D** engine from scratch running **2 AI-steered dragons** and **5 Unreal games** rebuilt in TypeScript at **60 Hz**",
-      "Verified all **15 game levels** are winnable with **bots that auto-play each level**, doubling as **Playwright** regression tests",
+      "Shipped a **Next.js 16, React 19, TypeScript** site on **Vercel** with a **Canvas 2D** engine I wrote from scratch, running **2 AI-steered dragons** and **5 Unreal games** at **60 Hz**",
+      "Verified all **15 game levels** are winnable with **Playwright** bots, behind a strict **CSP** with **0 npm vulnerabilities**",
     ],
   },
   {
@@ -86,16 +81,14 @@ const projects: Entry[] = [
     bullets: [
       "Created the **explore, search, and campsite details** screens in a **6-person** team, where campers join or leave lottery waitlists",
       "Wrote **7 Compose UI intent tests** covering **11 entrant user stories**, from first launch to opening a campsite by **QR code**",
-      "Organized the app into **4 feature packages** (entrant, owner, admin, account) following the **MVC** architecture",
     ],
   },
   {
     org: "Mistune Testing: Test Strategy Evaluation",
     right: "Python | pytest | Black-box | White-box",
     bullets: [
-      "Compared **black-box, white-box, AI, and mutation** testing on Mistune (**20M+ monthly downloads**) in a **5-person** team",
+      "Compared **black-box, white-box, AI, and mutation** testing on Mistune (**20M+ monthly downloads**) in a **5-person** team, measuring coverage with **pytest** and **coverage.py**",
       "Led **AI-driven black-box testing** with basic and structured **ChatGPT** prompts, validating every test against **CommonMark**",
-      "Measured statement and branch coverage with **pytest** and **coverage.py**, and fault detection by seeding defects with **mutmut**",
     ],
   },
   {
@@ -105,16 +98,7 @@ const projects: Entry[] = [
     right: "C++ | Unreal Engine 5",
     bullets: [
       "Programmed **5 games** in **Unreal Engine 5 and C++**, including Toon Tanks, Simple Shooter, and Crypt Raider",
-      "Built enemy AI with **behavior trees** that chases the player on sight and searches when it loses them",
-      "Coded **physics grabbing**, moving platforms, and **game modes** with health, damage, and win and loss conditions"],
-  },
-  {
-    org: "Systems Programming in C: Unix Shell and MapReduce",
-    right: "C | Linux | pthreads | Valgrind",
-    bullets: [
-      "Implemented a Unix shell in C that runs programs with **fork and execve**, with **pipes** and **I/O redirection** through **dup2**",
-      "Added **job control** (jobs, bg, fg) and **Ctrl-C/Ctrl-Z** handling with **sigaction** and process groups, with **0 Valgrind leaks**",
-      "Designed a thread-safe **thread pool** and **MapReduce** library on **mutexes and condition variables**, scheduled **Shortest Job First**",
+      "Built enemy AI with **behavior trees** that chases the player on sight and searches when it loses them, plus **physics grabbing** and win and loss **game modes**",
     ],
   },
 ];
@@ -198,11 +182,6 @@ export default function Resume() {
             <a href={site.github}><Ico d={ICONS.github} fill />github.com/rajputansh09</a>
             <a href={site.url}><Ico d={ICONS.globe} fill />anshrajput.com</a>
           </p>
-          <p className="r-tag">
-            <i>
-              Canadian Permanent Resident
-            </i>
-          </p>
         </header>
 
         <h2>Education</h2>
@@ -213,14 +192,11 @@ export default function Resume() {
           </div>
           <div className="r-row r-sub">
             <i>BSc Computer Engineering | Software Engineering Co-op</i>
-            <i>Edmonton, AB</i>
+            <i></i>
           </div>
           <ul>
             <li>
               <i>Courses: Data Structures, Algorithms, Operating Systems, Databases, Software Testing</i>
-            </li>
-            <li>
-              <i>Awards: International Admission Scholarship, University of Alberta</i>
             </li>
           </ul>
         </div>
