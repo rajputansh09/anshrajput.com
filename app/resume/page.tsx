@@ -27,9 +27,9 @@ const experience: Entry[] = [
     org: "UCert",
     right: "Aug 2026 - Present",
     sub: "Founder and Software Engineer",
-    subRight: "Edmonton, AB",
+    subRight: "Remote",
     bullets: [
-      "Architected a **multi-tenant ISO certification SaaS** on **Next.js, TypeScript, and Supabase**, with a **document engine** that generates each standard's **preloaded Word documents**",
+      "Architected a **multi-tenant ISO certification SaaS** on **Next.js and Supabase** that generates **preloaded Word documents**",
       "Developed self-serve readiness tools: **10 ISO 9001 modules**, a **30-question** quiz, and an **auto-saving 73-question** gap analysis",
       "Integrated **Stripe** billing across **3 plans** with checkout, cancel and resume, **webhooks**, and per-plan usage limits",
     ],
@@ -41,7 +41,7 @@ const experience: Entry[] = [
     bullets: [
       "Delivered a **29-page** lead-generating platform on **Next.js, Express, and PostgreSQL** that attracts clients from across Canada",
       "Grew search-indexed pages from **19 to 29 (+53%)** by migrating React/Vite to **Next.js SSR**, fixing a sitemap bug, and serving static HTML per page for Bing, which does not run JavaScript",
-      "Eliminated back-and-forth scheduling emails by launching **self-serve booking** on the **Google Calendar API**, secured with **JWT** auth and email-keyed **rate limiting** after diagnosing that the host assigns a new IP to every request",
+      "Replaced scheduling emails with **self-serve booking** on the **Google Calendar API**, secured by **JWT** and **rate limiting**",
     ],
   },
   {
@@ -59,6 +59,7 @@ const experience: Entry[] = [
     right: "Aug 2025",
     sub: "Full-Stack Developer | twishcare.ca",
     bullets: [
+      "Redesigned the practice's outdated site into a **modern, mobile-responsive** layout with clear navigation",
       "Expanded a psychotherapy practice's reach to **3 Ontario cities** with a **Node.js/Express** site and **3 Google Business Profiles**",
       "Launched an inquiry pipeline with **2 automated emails** per request (owner alert, client confirmation) and a **honeypot** for bots",
     ],
@@ -83,8 +84,9 @@ const projects: Entry[] = [
     label: "Source Code",
     right: "Kotlin | Jetpack Compose | Firebase",
     bullets: [
-      "Created the **explore, search, and campsite details** screens in a **6-person** team, where campers join lottery waitlists",
-      "Wrote **Compose UI tests** for the entrant user stories and merged **13 feature branches** into the team's release",
+      "Created the **explore, search, and campsite details** screens in a **6-person** team, where campers join or leave lottery waitlists",
+      "Wrote **7 Compose UI intent tests** covering **11 entrant user stories**, from first launch to opening a campsite by **QR code**",
+      "Organized the app into **4 feature packages** (entrant, owner, admin, account) following the **MVC** architecture",
     ],
   },
   {
@@ -92,7 +94,8 @@ const projects: Entry[] = [
     right: "Python | pytest | Black-box | White-box",
     bullets: [
       "Compared **black-box, white-box, AI, and mutation** testing on Mistune (**20M+ monthly downloads**) in a **5-person** team",
-      "Led **AI-driven black-box testing** with **ChatGPT**, validating tests against **CommonMark** in **pytest** and **coverage.py**",
+      "Led **AI-driven black-box testing** with basic and structured **ChatGPT** prompts, validating every test against **CommonMark**",
+      "Measured statement and branch coverage with **pytest** and **coverage.py**, and fault detection by seeding defects with **mutmut**",
     ],
   },
   {
@@ -100,13 +103,17 @@ const projects: Entry[] = [
     link: "https://github.com/rajputansh09",
     label: "Source Code",
     right: "C++ | Unreal Engine 5",
-    bullets: ["Programmed **5 games in Unreal Engine 5 and C++** featuring **behavior tree** enemy AI, physics grabbing, and game modes"],
+    bullets: [
+      "Programmed **5 games** in **Unreal Engine 5 and C++**, including Toon Tanks, Simple Shooter, and Crypt Raider",
+      "Built enemy AI with **behavior trees** that chases the player on sight and searches when it loses them",
+      "Coded **physics grabbing**, moving platforms, and **game modes** with health, damage, and win and loss conditions"],
   },
   {
     org: "Systems Programming in C: Unix Shell and MapReduce",
     right: "C | Linux | pthreads | Valgrind",
     bullets: [
-      "Implemented a Unix shell with **pipes**, **I/O redirection**, and **job control** on **fork, execve, and sigaction**, with **0 Valgrind leaks**",
+      "Implemented a Unix shell in C that runs programs with **fork and execve**, with **pipes** and **I/O redirection** through **dup2**",
+      "Added **job control** (jobs, bg, fg) and **Ctrl-C/Ctrl-Z** handling with **sigaction** and process groups, with **0 Valgrind leaks**",
       "Designed a thread-safe **thread pool** and **MapReduce** library on **mutexes and condition variables**, scheduled **Shortest Job First**",
     ],
   },
@@ -193,7 +200,7 @@ export default function Resume() {
           </p>
           <p className="r-tag">
             <i>
-              Edmonton, AB | Canadian Permanent Resident | Open to relocation
+              Canadian Permanent Resident
             </i>
           </p>
         </header>
@@ -210,7 +217,10 @@ export default function Resume() {
           </div>
           <ul>
             <li>
-              <i>Courses: Data Structures, Algorithms, Operating Systems, Databases, Software Testing | International Admission Scholarship</i>
+              <i>Courses: Data Structures, Algorithms, Operating Systems, Databases, Software Testing</i>
+            </li>
+            <li>
+              <i>Awards: International Admission Scholarship, University of Alberta</i>
             </li>
           </ul>
         </div>
