@@ -30,6 +30,15 @@ npm run dev
 
 Then open http://localhost:3000. Everything works locally except the contact form and the location clock, those need the env vars below.
 
+## Tests
+
+```bash
+npm run build
+npm test
+```
+
+There's a bot for each game in `tests/bots/`. Each one plays all 3 levels through the actual game code and the test fails if it can't win, so I know every level can be beaten. There are also a few browser checks: the home page loads with no errors, every arcade level starts, and the gap sample gives the right result.
+
 ## Env vars
 
 Put these in `.env.local` or in the Vercel project settings.
@@ -48,6 +57,7 @@ BLOB_READ_WRITE_TOKEN= # Vercel adds this when you link a Blob store
 app/          pages, the resume and the api routes (contact, status, whereabouts)
 components/   dragon/ for the dragons, arcade/ for the games, plus everything else on the page
 lib/          site info, skills list and email helpers
+tests/        the game bots and browser checks
 ```
 
 Feel free to read through the code. Just don't republish the site, the dragons or the games as your own.
