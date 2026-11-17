@@ -39,7 +39,7 @@ const experience: Entry[] = [
     right: "Mar 2026 - Present",
     sub: "Full-Stack Developer | certcanada.ca",
     bullets: [
-      "Delivered a **29-page** lead-generating platform on **Next.js, Express, and PostgreSQL** that attracts clients from across Canada",
+      "Delivered a **29-page** lead-generating platform on **Next.js, Express, and PostgreSQL** scoring **100/100 on PageSpeed Insights**",
       "Grew search-indexed pages from **19 to 29 (+53%)** by migrating React/Vite to **Next.js SSR**, fixing a sitemap bug, and serving static HTML per page for Bing, which does not run JavaScript",
       "Replaced scheduling emails with **self-serve booking** on the **Google Calendar API**, secured by **JWT** and **rate limiting**",
     ],
