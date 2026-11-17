@@ -3,6 +3,7 @@ import { site } from "../../../lib/site";
 import { ownerEmail, senderEmail } from "../../../lib/email";
 import { checkEmailDomain } from "../../../lib/emailDomain";
 import { createHash } from "node:crypto";
+import { get, put } from "@vercel/blob";
 
 const HOUR = 60 * 60 * 1000;
 const PER_EMAIL = 3;
@@ -10,6 +11,7 @@ const PER_IP = 3;
 const PER_IP_DAY = 6;
 const DAY = 24 * HOUR;
 const MIN_FILL_MS = 3000;
+const DAILY_CAP = 20;
 const GLOBAL = 40;
 const MAX_BODY = 8_000;
 
@@ -80,6 +82,31 @@ async function send(key: string, payload: Record<string, unknown>) {
 // mask the address in logs, e.g
 const mask = (a: string) => a.replace(/^(.{2})[^@]*(@.*)$/, "$1***$2");
 
+// the daily count lives in Blob storage so every server instance shares it (memory resets on each new instance)
+const dayFile = () => `contact/sent-${new Date().toISOString().slice(0, 10)}.json`;
+async function sentToday(): Promise<number> {
+  try {
+    const res = await get(dayFile(), { access: "private", useCache: false });
+    if (!res) return 0;
+    const saved = (await new Response(res.stream).json()) as { count?: number };
+    return Number(saved.count) || 0;
+  } catch {
+    return 0;
+  }
+}
+async function countSend(previous: number) {
+  try {
+    await put(dayFile(), JSON.stringify({ count: previous + 1 }), {
+      access: "private",
+      addRandomSuffix: false,
+      allowOverwrite: true,
+      contentType: "application/json",
+    });
+  } catch (err) {
+    console.error("contact: couldn't save the daily count", err instanceof Error ? err.message : err);
+  }
+}
+
 const fail = (error: string, status: number) => Response.json({ error }, { status, headers: { "Cache-Control": "no-store" } });
 
 export async function POST(req: Request) {
@@ -136,6 +163,12 @@ export async function POST(req: Request) {
     return fail("rate_limited", 429);
   }
 
+  const today = await sentToday();
+  if (today >= DAILY_CAP) {
+    console.log(`contact: daily cap of ${DAILY_CAP} reached`);
+    return fail("rate_limited", 429);
+  }
+
   const domain = await checkEmailDomain(email);
   if (domain !== "ok") {
     console.log(`contact: rejected ${mask(email)} (${domain})`);
@@ -171,6 +204,7 @@ export async function POST(req: Request) {
   byEmail.set(email, [...mine, now]);
   byIp.set(ip, [...fromIpDay, now]);
   seenMessages.set(fingerprint, now);
+  await countSend(today);
   all.push(now);
   if (byEmail.size > 5000) byEmail.clear();
   if (byIp.size > 5000) byIp.clear();

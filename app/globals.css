@@ -240,7 +240,15 @@ kbd {
 .clause { font-family: var(--mono); font-size: 12px; color: var(--moss); margin-right: 6px; white-space: nowrap; }
 .gap-result { border-left: 1px solid var(--line); display: grid; place-items: center; align-content: center; gap: 2px; padding: 20px; text-align: center; }
 .ring-bg { fill: none; stroke: var(--line-2); stroke-width: 5; }
-.ring { fill: none; stroke: var(--moss); stroke-width: 5; stroke-linecap: round; transform: rotate(-90deg); transform-origin: 50% 50%; transition: stroke-dashoffset 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.ring { fill: none; stroke: var(--moss); stroke-width: 5; stroke-linecap: round; transform: rotate(-90deg); transform-origin: 50% 50%; transition: stroke-dashoffset 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), stroke 0.3s ease; }
+/* the result takes the colour of the verdict once all 3 are answered */
+.gap-result .gap-num, .gap-result .gap-label { transition: color 0.3s ease; }
+.gap-result.tone-good .ring { stroke: var(--moss); }
+.gap-result.tone-good .gap-num, .gap-result.tone-good .gap-label { color: var(--moss); }
+.gap-result.tone-mid .ring { stroke: var(--brass); }
+.gap-result.tone-mid .gap-num, .gap-result.tone-mid .gap-label { color: var(--brass); }
+.gap-result.tone-low .ring { stroke: var(--danger); }
+.gap-result.tone-low .gap-num, .gap-result.tone-low .gap-label { color: var(--danger); }
 .gap-num { font-size: 26px; font-weight: 700; letter-spacing: -0.03em; margin-top: -62px; margin-bottom: 34px; font-variant-numeric: tabular-nums; }
 .gap-label { font-size: 13px; color: var(--muted); }
 

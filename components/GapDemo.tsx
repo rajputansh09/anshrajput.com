@@ -8,6 +8,14 @@ const questions = [
   { clause: "5.2", topic: "Quality policy", q: "Is your quality policy communicated and understood by staff?" },
   { clause: "9.2", topic: "Internal audit", q: "Do you run internal audits on a planned schedule?" },
 ];
+// same cut-offs as the real UCert mock audit: 70% and up is audit-ready, 40 to 69 needs work
+const verdict = (pct: number) =>
+  pct >= 70
+    ? { tone: "good", label: "Audit-ready on this sample" }
+    : pct >= 40
+      ? { tone: "mid", label: "Needs improvement before an audit" }
+      : { tone: "low", label: "Not ready for an audit yet" };
+
 const options = [
   { label: "Yes", score: 1 },
   { label: "Partly", score: 0.5 },
@@ -29,6 +37,7 @@ export default function GapDemo() {
   const score = Math.round((answers.reduce<number>((s, a) => s + (a ?? 0), 0) / questions.length) * 100);
   const progress = answered / questions.length;
   const C = 2 * Math.PI * 26;
+  const result = verdict(score);
 
   const pick = (qi: number, score: number) => {
     setAnswers((prev) => prev.map((a, i) => (i === qi ? score : a)));
@@ -67,7 +76,7 @@ export default function GapDemo() {
             </li>
           ))}
         </ol>
-        <div className="gap-result">
+        <div className={`gap-result ${done ? `tone-${result.tone}` : ""}`}>
           <svg viewBox="0 0 64 64" width="96" height="96" aria-hidden="true">
             <circle cx="32" cy="32" r="26" className="ring-bg" />
             <circle
@@ -80,7 +89,7 @@ export default function GapDemo() {
             />
           </svg>
           <p className="gap-num">{done ? `${score}%` : `${answered}/3`}</p>
-          <p className="gap-label">{done ? "audit-ready on this sample" : "answered"}</p>
+          <p className="gap-label" aria-live="polite">{done ? result.label : "answered"}</p>
           {done && (
             <button type="button" className="link-btn" onClick={() => setAnswers([null, null, null])}>
               Start over
