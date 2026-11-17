@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   // its own preview, so a resume link shared on LinkedIn doesn't show the home page card
   openGraph: {
     title: "Ansh Rajput | Resume",
-    description: "One page: UCert, CertCanada, Twish Care, my co-op term, projects and skills. PDF download included.",
+    description: "My one-page resume: founder of UCert, full-stack developer for CertCanada and Twish Care, my co-op term, projects and skills, with a PDF download.",
     url: "/resume",
     siteName: "Ansh Rajput",
     type: "website",
