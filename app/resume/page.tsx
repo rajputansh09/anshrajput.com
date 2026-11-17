@@ -198,7 +198,7 @@ export default function Resume() {
           </div>
           <ul>
             <li>
-              <i>Courses: Data Structures, Algorithms, Operating Systems, Databases, Software Testing | International Admission Scholarship</i>
+              <i>Courses: Data Structures, Algorithms, Operating Systems, Database Management, Software Testing, Object-Oriented Programming</i>
             </li>
           </ul>
         </div>
