@@ -52,7 +52,6 @@ const experience: Entry[] = [
     bullets: [
       "Returned **100+ desktops and laptops** to Alberta classrooms in **4 months** by diagnosing and fixing software and OS faults",
       "Imaged, configured, and **QA-tested 100%** of devices so schools and community groups received ready-to-use computers",
-      "Scripted **system setup and configuration** tasks to automate device preparation and cut repetitive manual work",
     ],
   },
   {
