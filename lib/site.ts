@@ -21,7 +21,7 @@ export const skills: [string, string][] = [
   ["Languages", "TypeScript, JavaScript, Python, C, C++, Java, Kotlin, SQL"],
   ["Frameworks", "Next.js, React, Node.js, Express, Tailwind CSS, Jetpack Compose"],
   ["Data and services", "PostgreSQL, Supabase, Firebase, SQLite, Stripe, Resend, Google Calendar API"],
-  ["Tools", "Git, GitHub Actions, Docker, Linux, Vercel, Railway, Postman, Claude Code, Cursor"],
+  ["Tools", "Git, GitHub Actions, Docker, Linux, Vercel, Railway, Postman, Cursor"],
 ];
 
 export type Project = { name: string; what: string; team: string; stack: string[]; href?: string; play?: string; kind: "web" | "school" | "game" };

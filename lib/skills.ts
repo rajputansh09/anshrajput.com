@@ -83,8 +83,7 @@ export const rings: Ring[] = [
     skills: [
       { name: "Git", uses: ["ucert", "certcanada", "twish", "site", ...GAMES, "carbon", "mistune", "mapreduce"], note: "The one thread that binds every seal." },
       { name: "Vercel", uses: ["certcanada", "twish", "site"], note: "Hosts this site and two client platforms, serverless functions included." },
-      { name: "Playwright", uses: ["site"], note: "Bots that play this site's games to tune the difficulty, plus screenshot checks on desktop and phone." },
-      { name: "Claude Code", uses: ["site"], note: "AI pair programming, with every change checked by tests and bots." },
+      { name: "Playwright", uses: ["site"], note: "Bots that clear every level of my 5 games, plus checks that the page and each level load in a real browser." },
       { name: "GitHub Actions", short: "Actions", uses: ["carbon"], note: "The Android team's CI checks on every change." },
       { name: "Linux", uses: ["mapreduce"], note: "POSIX threads, built and tested on Linux." },
       { name: "Railway", uses: ["certcanada"], note: "Runs the API behind CertCanada." },
