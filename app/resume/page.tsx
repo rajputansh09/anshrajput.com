@@ -25,19 +25,18 @@ type Entry = { org: string; right: string; sub?: string; subRight?: string; bull
 const experience: Entry[] = [
   {
     org: "UCert",
-    right: "Aug 2026 to Present",
+    right: "Aug 2026 - Present",
     sub: "Founder and Software Engineer",
     subRight: "Edmonton, AB",
     bullets: [
-      "Architecting a **multi-tenant ISO certification SaaS** (**Next.js, TypeScript, Supabase**) that centralizes every ISO record",
-      "Automated ISO paperwork with a **document engine** generating each standard's **preloaded Word documents**",
-      "Enabled self-serve readiness with **10 ISO 9001 modules**, a **30-question** quiz, and an **auto-saving 73-question** gap analysis",
-      "Readied the platform for paying customers with **Stripe** across **3 plans**: checkout, cancel and resume, **webhooks**, plan limits",
+      "Architected a **multi-tenant ISO certification SaaS** on **Next.js, TypeScript, and Supabase**, with a **document engine** that generates each standard's **preloaded Word documents**",
+      "Developed self-serve readiness tools: **10 ISO 9001 modules**, a **30-question** quiz, and an **auto-saving 73-question** gap analysis",
+      "Integrated **Stripe** billing across **3 plans** with checkout, cancel and resume, **webhooks**, and per-plan usage limits",
     ],
   },
   {
     org: "CertCanada",
-    right: "Mar 2026 to Present",
+    right: "Mar 2026 - Present",
     sub: "Full-Stack Developer | certcanada.ca",
     bullets: [
       "Delivered a **29-page** lead-generating platform on **Next.js, Express, and PostgreSQL** that attracts clients from across Canada",
@@ -47,13 +46,12 @@ const experience: Entry[] = [
   },
   {
     org: "Calgary Board of Education, Alberta Computers for Schools",
-    right: "Feb 2026 to May 2026",
+    right: "Feb 2026 - May 2026",
     sub: "Computer Technician (Co-op)",
     subRight: "Calgary, AB",
     bullets: [
       "Returned **100+ desktops and laptops** to Alberta classrooms in **4 months** by diagnosing and fixing software and OS faults",
-      "Standardized every machine for classroom use by **imaging and configuring** its operating system and software",
-      "Guaranteed schools and community groups ready-to-use computers by **QA-testing 100%** of devices before release",
+      "Imaged, configured, and **QA-tested 100%** of devices so schools and community groups received ready-to-use computers",
     ],
   },
   {
@@ -62,7 +60,7 @@ const experience: Entry[] = [
     sub: "Full-Stack Developer | twishcare.ca",
     bullets: [
       "Expanded a psychotherapy practice's reach to **3 Ontario cities** with a **Node.js/Express** site and **3 Google Business Profiles**",
-      "Ensured **every inquiry** reaches the owner instantly, with client confirmation, via **2 automated emails** and a **honeypot**",
+      "Launched an inquiry pipeline with **2 automated emails** per request (owner alert, client confirmation) and a **honeypot** for bots",
     ],
   },
 ];
@@ -85,15 +83,16 @@ const projects: Entry[] = [
     label: "Source Code",
     right: "Kotlin | Jetpack Compose | Firebase",
     bullets: [
-      "Developed the **explore, search, and details** screens in **Jetpack Compose** and **Firebase** for finding lotteries, in a **6-person** team",
+      "Created the **explore, search, and campsite details** screens in a **6-person** team, where campers join lottery waitlists",
+      "Wrote **Compose UI tests** for the entrant user stories and merged **13 feature branches** into the team's release",
     ],
   },
   {
     org: "Mistune Testing: Test Strategy Evaluation",
-    right: "Python | Black-box | LLM Testing",
+    right: "Python | pytest | Black-box | White-box",
     bullets: [
-      "Compared **black-box, white-box, and AI** test suites on Mistune, a Markdown parser with **20M+ monthly downloads**",
-      "Led **AI-driven black-box testing** in a **5-person** team, measuring if LLM-written tests catch what human tests catch",
+      "Compared **black-box, white-box, AI, and mutation** testing on Mistune (**20M+ monthly downloads**) in a **5-person** team",
+      "Led **AI-driven black-box testing** with **ChatGPT**, validating tests against **CommonMark** in **pytest** and **coverage.py**",
     ],
   },
   {
@@ -101,12 +100,15 @@ const projects: Entry[] = [
     link: "https://github.com/rajputansh09",
     label: "Source Code",
     right: "C++ | Unreal Engine 5",
-    bullets: ["Created **5 games in Unreal Engine 5 and C++** featuring **behavior tree** enemy AI, physics grabbing, and game-mode systems"],
+    bullets: ["Programmed **5 games in Unreal Engine 5 and C++** featuring **behavior tree** enemy AI, physics grabbing, and game modes"],
   },
   {
-    org: "MapReduce: Multithreaded C Library",
-    right: "C | pthreads | Valgrind",
-    bullets: ["Designed a thread-safe C **thread pool** and **MapReduce** library on **mutexes and condition variables**, **Valgrind**-verified"],
+    org: "Systems Programming in C: Unix Shell and MapReduce",
+    right: "C | Linux | pthreads | Valgrind",
+    bullets: [
+      "Implemented a Unix shell with **pipes**, **I/O redirection**, and **job control** on **fork, execve, and sigaction**, with **0 Valgrind leaks**",
+      "Designed a thread-safe **thread pool** and **MapReduce** library on **mutexes and condition variables**, scheduled **Shortest Job First**",
+    ],
   },
 ];
 
@@ -115,8 +117,7 @@ const skills: [string, string][] = [
   ["Frameworks", "React, Next.js, Node.js, Express, Tailwind CSS, Jetpack Compose, Unreal Engine 5, scikit-learn"],
   ["Data/Services", "PostgreSQL, SQLite, Supabase, Firebase, Stripe, Resend, Vercel Blob, Google Calendar API, JWT, Webhooks"],
   ["Tools/Cloud", "Git, GitHub Actions, Linux, Docker, Postman, Vercel, Railway, Playwright, Visual Studio, Cursor, Claude Code"],
-  ["Concepts", "Data Structures & Algorithms, OOP, REST APIs, Serverless, Multithreading, CI/CD, E2E Testing, SEO, Game AI"],
-  ["Additional", "English, Hindi, Punjabi (Fluent), Spanish (Beginner) | Canadian PR, open to relocation"],
+  ["Concepts", "Data Structures & Algorithms, OOP, REST APIs, Serverless, Multithreading, CI/CD, Software Testing, SEO, Game AI"],
 ];
 
 // inline icons so they print sharp
@@ -192,7 +193,7 @@ export default function Resume() {
           </p>
           <p className="r-tag">
             <i>
-              Software Engineering co-op student and full-stack developer: <b>2 live client platforms</b> shipped, a <b>SaaS</b> in development
+              Edmonton, AB | Canadian Permanent Resident | Open to relocation
             </i>
           </p>
         </header>
