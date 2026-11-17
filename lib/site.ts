@@ -3,7 +3,7 @@ export const site = {
   name: "Ansh Rajput",
   url: "https://www.anshrajput.com",
   email: "rajputansh91224@gmail.com",
-  linkedin: "https://linkedin.com/in/ansh-rajput-3a5b78332",
+  linkedin: "https://linkedin.com/in/rajputansh09",
   github: "https://github.com/rajputansh09",
   location: "Edmonton, Alberta",
   timeZone: "America/Edmonton",

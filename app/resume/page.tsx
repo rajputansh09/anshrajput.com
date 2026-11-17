@@ -180,7 +180,7 @@ export default function Resume() {
           <p className="r-contact">
             <a href="tel:+18253338999"><Ico d={ICONS.phone} fill />825-333-8999</a>
             <a href="mailto:arajput3@ualberta.ca"><Ico d={ICONS.mail} fill />arajput3@ualberta.ca</a>
-            <a href={site.linkedin}><Ico d={ICONS.linkedin} fill />linkedin.com/in/ansh-rajput-3a5b78332</a>
+            <a href={site.linkedin}><Ico d={ICONS.linkedin} fill />linkedin.com/in/rajputansh09</a>
             <a href={site.github}><Ico d={ICONS.github} fill />github.com/rajputansh09</a>
             <a href={site.url}><Ico d={ICONS.globe} fill />anshrajput.com</a>
           </p>
