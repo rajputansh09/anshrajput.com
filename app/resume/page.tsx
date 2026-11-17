@@ -27,7 +27,7 @@ const experience: Entry[] = [
     org: "UCert",
     right: "Aug 2026 - Present",
     sub: "Founder and Software Engineer",
-    subRight: "Remote",
+    subRight: "Edmonton, AB",
     bullets: [
       "Architected a **multi-tenant ISO certification SaaS** on **Next.js and Supabase** that generates **preloaded Word documents**, with **10 ISO 9001 modules**, a **30-question** quiz, and an **auto-saving 73-question** gap analysis",
       "Integrated **Stripe** billing across **3 plans** with checkout, cancel and resume, **webhooks**, and per-plan usage limits",
@@ -46,6 +46,7 @@ const experience: Entry[] = [
     org: "Calgary Board of Education, Alberta Computers for Schools",
     right: "Feb 2026 - May 2026",
     sub: "Computer Technician (Co-op)",
+    subRight: "Calgary, AB",
     bullets: [
       "Returned **100+ desktops and laptops** to Alberta classrooms in **4 months** by diagnosing and fixing software and OS faults",
       "Imaged, configured, and **QA-tested 100%** of devices so schools and community groups received ready-to-use computers",
@@ -192,11 +193,11 @@ export default function Resume() {
           </div>
           <div className="r-row r-sub">
             <i>BSc Computer Engineering | Software Engineering Co-op</i>
-            <i></i>
+            <i>Edmonton, AB</i>
           </div>
           <ul>
             <li>
-              <i>Courses: Data Structures, Algorithms, Operating Systems, Databases, Software Testing</i>
+              <i>Courses: Data Structures, Algorithms, Operating Systems, Databases, Software Testing | International Admission Scholarship</i>
             </li>
           </ul>
         </div>
