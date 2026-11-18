@@ -60,6 +60,6 @@ lib/          site info, skills list and email helpers
 tests/        the game bots and browser checks
 ```
 
-Feel free to read through the code. Just don't republish the site, the dragons or the games as your own.
+Feel free to read through the code. Just don't republish the site, the dragons or the games as your own. The full terms are in [LICENSE](LICENSE).
 
 If you want to reach me, use the form on [anshrajput.com](https://www.anshrajput.com/#contact) or [LinkedIn](https://linkedin.com/in/rajputansh09).

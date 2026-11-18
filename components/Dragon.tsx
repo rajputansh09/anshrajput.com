@@ -955,7 +955,7 @@ export default function Dragon() {
         const a = drav.seg[0], b = bal.seg[0];
         if (Math.hypot(a.x - b.x, a.y - b.y) < 260 * s) {
           meetAt = t + 5;
-          // they drift apart, each heading forward and away from the other.
+          // they drift apart, each heading forward and away from the other
           gw.part(() => bal.seg[0], t, 6);
           rw.part(() => drav.seg[0], t, 6);
           if (!chasingNow()) gw.pick(t, bounds(), wallsFor(0), s, badGreen, drav);
