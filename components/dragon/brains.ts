@@ -388,7 +388,6 @@ export class Duel {
     else if (du <= 0.05) me.track(h2.x, h2.y, dl);
   }
 
-  // where a strike lands: between the striker's jaw and the closest part of the other
   hitIdx: number[] = [];
   private contact(me: Creature, other: Creature): P {
     const j = me.headPt(46, 0), { i } = other.bodyGap(j), q = other.seg[Math.max(0, i)];
