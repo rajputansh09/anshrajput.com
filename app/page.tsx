@@ -278,7 +278,7 @@ export default function Home() {
               <dl className="spec">
                 <div><dt>Based in</dt><dd>Edmonton, Alberta</dd></div>
                 <div><dt>Studying</dt><dd>Computer Engineering, Software co-op, University of Alberta, class of 2028</dd></div>
-                <div><dt>Speaks</dt><dd>English, some Spanish</dd></div>
+                <div><dt>Speaks</dt><dd>English, Spanish (Elementary proficiency)</dd></div>
                 <div><dt>Engines</dt><dd>Next.js on the web, Unreal Engine 5 for games</dd></div>
                 <div><dt>Open to</dt><dd>Co-op and internship roles, relocation included</dd></div>
               </dl>
