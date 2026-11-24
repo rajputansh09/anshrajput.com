@@ -80,7 +80,7 @@ const COMMANDS: Record<string, string | (() => string)> = {
   stack: "TypeScript, Next.js, React, Node.js, Express, PostgreSQL, Supabase, C, C++, Python, Kotlin, Unreal Engine 5. Shipped on Vercel.",
   games: "Five Unreal Engine 5 games, all playable on this page. Try: play tanks, play obstacle, play crypt, play shooter, play warehouse.",
   dragons: "Dravoxus (green) and Balerian (red). Written from scratch on a 2D canvas: steering, collision, fire, duels and two games. Press Trials on the right edge, or tap Dragons on a phone.",
-  languages: "English. Learning Spanish: hola.",
+  languages: "English, Spanish (Elementary proficiency).",
   principles: "Make it feel right. Measure, don't guess. Own it end to end. Explain the why.",
   resume: () => { window.location.href = "/resume"; return "Opening the resume..."; },
   contact: () => { document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" }); return "Taking you to the contact form."; },
